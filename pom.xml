@@ -10,10 +10,10 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>com.example</groupId>
-    <artifactId>timer_backend</artifactId>
+    <artifactId>timer-backend-spring</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>timer_backend</name>
-    <description>timer_backend</description>
+    <name>timer-backend-spring</name>
+    <description>timer-backend-spring</description>
     <url/>
     <licenses>
         <license/>
