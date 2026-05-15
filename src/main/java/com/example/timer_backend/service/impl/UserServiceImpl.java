@@ -21,10 +21,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 @Slf4j
-@Component
+@Service
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
@@ -42,8 +42,7 @@ public class UserServiceImpl implements UserService {
         Role userRole = roleRepository.findByName(RoleName.USER)
                 .orElseThrow(() -> new RuntimeException("Error: Role not found."));
 
-        User user = userMapper.toEntity(request, passwordEncoder.encode(request.getPassword()));
-        user.setRoles(Set.of(userRole));
+        User user = userMapper.toEntity(request, passwordEncoder.encode(request.getPassword()), Set.of(userRole));
         User saved = userRepository.save(user);
 
         return userMapper.toModel(saved);
