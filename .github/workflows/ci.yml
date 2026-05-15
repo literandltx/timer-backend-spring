@@ -1,6 +1,10 @@
 name: Java CI
 
-on: [ push, pull_request ]
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
 
 jobs:
   build:
@@ -14,5 +18,9 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
           cache: maven
-      - name: Verify
-        run: mvn --batch-mode --update-snapshots verify
+#      - name: Verify
+#        run: mvn --batch-mode --update-snapshots verify
+      - name: Make Maven Wrapper executable
+        run: chmod +x mvnw
+      - name: Build and Verify
+        run: ./mvnw --batch-mode --update-snapshots clean verify
