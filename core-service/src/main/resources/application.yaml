@@ -17,3 +17,6 @@ jwt:
 app:
   rate-limit:
     enabled: true
+
+server:
+  port: 8080
