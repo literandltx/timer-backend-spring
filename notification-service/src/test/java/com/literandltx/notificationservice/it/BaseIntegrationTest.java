@@ -1,6 +1,7 @@
 package com.literandltx.notificationservice.it;
 
 import io.restassured.RestAssured;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -40,5 +41,10 @@ public abstract class BaseIntegrationTest {
     void setUp() {
         RestAssured.baseURI = "http://127.0.0.1";
         RestAssured.port = port;
+    }
+
+    @AfterEach
+    void tearDown() {
+        RestAssured.reset();
     }
 }
