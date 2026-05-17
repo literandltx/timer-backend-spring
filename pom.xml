@@ -40,6 +40,7 @@
     <modules>
         <module>core-service</module>
         <module>report-service</module>
+        <module>notification-service</module>
     </modules>
 
     <dependencies>

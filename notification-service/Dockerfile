@@ -3,12 +3,12 @@ WORKDIR /app
 
 COPY . .
 
-RUN ./mvnw clean package -pl report-service -am -DskipTests
+RUN ./mvnw clean package -pl notification-service -am -DskipTests
 
 FROM eclipse-temurin:17-jre
 WORKDIR /app
 
-COPY --from=build /app/report-service/target/*.jar app.jar
+COPY --from=build /app/notification-service/target/*.jar app.jar
 
 EXPOSE 8080
 ENTRYPOINT ["java", "-jar", "app.jar"]

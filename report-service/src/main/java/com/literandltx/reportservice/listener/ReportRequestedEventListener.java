@@ -11,7 +11,7 @@ public class ReportRequestedEventListener {
 
     @KafkaListener(topics = "${app.kafka.topics.report}")
     public void onReportRequested(ReportRequestedEvent event) {
-        log.info("Event received: {}", event);
+        log.info("Report event received: {}", event);
     }
 
 }
