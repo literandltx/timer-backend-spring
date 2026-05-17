@@ -39,6 +39,7 @@ class LabelControllerIT extends BaseIntegrationTest {
 
     @BeforeEach
     void setUpUser() {
+        super.setUp();
         User testUser = User.builder()
                 .email(userEmail)
                 .password(passwordEncoder.encode(userPlainPassword))
