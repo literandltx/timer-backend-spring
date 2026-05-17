@@ -1,6 +1,5 @@
 package com.literandltx.reportservice.event;
 
-import java.util.Map;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -9,10 +8,9 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class ReportRequestedEvent {
+public class ReportStatusEvent {
     private UUID reportId;
-    private Long userId;
-    private String email;
-    private String reportType;
-    private Map<String, Object> filters;
+    private String status;
+    private String s3Key;
+    private String errorMessage;
 }

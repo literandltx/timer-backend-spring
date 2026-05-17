@@ -15,6 +15,9 @@ public class KafkaConfig {
     @Value("${app.kafka.topics.report}")
     private String reportTopic;
 
+    @Value("${app.kafka.topics.core}")
+    private String coreTopic;
+
     @Bean
     public KafkaAdmin.NewTopics createMultipleTopics() {
         return new KafkaAdmin.NewTopics(
@@ -24,6 +27,11 @@ public class KafkaConfig {
                         .build(),
 
                 TopicBuilder.name(reportTopic)
+                        .partitions(1)
+                        .replicas(1)
+                        .build(),
+
+                TopicBuilder.name(coreTopic)
                         .partitions(3)
                         .replicas(1)
                         .build()

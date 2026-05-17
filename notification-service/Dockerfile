@@ -3,7 +3,8 @@ WORKDIR /app
 
 COPY . .
 
-RUN ./mvnw clean package -pl notification-service -am -DskipTests
+RUN --mount=type=cache,target=/root/.m2 \
+    ./mvnw clean package -pl notification-service -am -DskipTests
 
 FROM eclipse-temurin:17-jre
 WORKDIR /app

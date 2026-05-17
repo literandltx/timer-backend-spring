@@ -1,0 +1,20 @@
+# Ignore build outputs
+**/target/
+**/.gradle/
+**/build/
+
+# Ignore IDE settings
+**/.idea/
+**/.vscode/
+**/*.iml
+.DS_Store
+
+# Ignore local container data volumes (Crucial!)
+**/data/
+**/kafka-data/
+**/zookeeper-data/
+**/.docker/
+
+# Ignore git
+.git
+.gitignore
