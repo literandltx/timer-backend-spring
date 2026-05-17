@@ -9,11 +9,15 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.kafka.ConfluentKafkaContainer;
+import org.testcontainers.utility.DockerImageName;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
 public abstract class BaseIntegrationTest {
+
     private static final PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16-alpine");
+    private static final ConfluentKafkaContainer kafka = new ConfluentKafkaContainer(DockerImageName.parse("confluentinc/cp-kafka:7.5.0"));
 
     @LocalServerPort
     protected Integer port;
@@ -21,11 +25,7 @@ public abstract class BaseIntegrationTest {
     @BeforeAll
     static void beforeAll() {
         postgres.start();
-    }
-
-    @BeforeEach
-    void setUpRestAssured() {
-        RestAssured.port = port;
+        kafka.start();
     }
 
     @DynamicPropertySource
@@ -33,10 +33,12 @@ public abstract class BaseIntegrationTest {
         registry.add("spring.datasource.url", postgres::getJdbcUrl);
         registry.add("spring.datasource.username", postgres::getUsername);
         registry.add("spring.datasource.password", postgres::getPassword);
+        registry.add("spring.kafka.bootstrap-servers", kafka::getBootstrapServers);
     }
 
     @BeforeEach
     void setUp() {
+        RestAssured.port = port;
         RestAssured.baseURI = "http://localhost:" + port;
     }
 }
