@@ -16,8 +16,8 @@ import org.testcontainers.utility.DockerImageName;
 @ActiveProfiles("test")
 public abstract class BaseIntegrationTest {
 
-    private static final PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16-alpine");
-    private static final ConfluentKafkaContainer kafka = new ConfluentKafkaContainer(DockerImageName.parse("confluentinc/cp-kafka:7.5.0"));
+    private static final PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:17-alpine");
+    private static final ConfluentKafkaContainer kafka = new ConfluentKafkaContainer(DockerImageName.parse("confluentinc/cp-kafka:8.1.3"));
 
     @LocalServerPort
     protected Integer port;
@@ -38,7 +38,7 @@ public abstract class BaseIntegrationTest {
 
     @BeforeEach
     void setUp() {
+        RestAssured.baseURI = "http://127.0.0.1";
         RestAssured.port = port;
-        RestAssured.baseURI = "http://localhost:" + port;
     }
 }
