@@ -1,0 +1,38 @@
+databaseChangeLog:
+  - changeSet:
+      id: 07-create-reports-table
+      author: your-name
+      changes:
+        - createTable:
+            tableName: reports
+            columns:
+              - column:
+                  name: id
+                  type: UUID
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: pk_reports
+                    nullable: false
+              - column:
+                  name: user_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: report_type
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: status
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: s3_key
+                  type: VARCHAR(255)
+                  constraints:
+                    unique: true
+              - column:
+                  name: error_message
+                  type: VARCHAR(1000)

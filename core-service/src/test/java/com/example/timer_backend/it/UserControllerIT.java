@@ -35,6 +35,7 @@ class UserControllerIT extends BaseIntegrationTest {
 
     @BeforeEach
     void setUp() {
+        super.setUp();
         currentUser = User.builder()
                 .email(userEmail)
                 .password(passwordEncoder.encode(userPlainPassword))

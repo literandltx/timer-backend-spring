@@ -44,6 +44,7 @@ class TimerEntryControllerIT extends BaseIntegrationTest {
 
     @BeforeEach
     void setUp() {
+        super.setUp();
         testUser = User.builder()
                 .email(userEmail)
                 .password(passwordEncoder.encode(userPlainPassword))

@@ -6,11 +6,13 @@ import com.example.timer_backend.dto.user.UserRegistrationRequestDto;
 import com.example.timer_backend.dto.user.UserRegistrationResponseDto;
 import com.example.timer_backend.dto.user.UserResponseDto;
 import com.example.timer_backend.dto.user.UserUpdateRequestDto;
+import com.example.timer_backend.event.NotificationRequestedEvent;
 import com.example.timer_backend.exception.custom.UserAlreadyExistsException;
 import com.example.timer_backend.mapper.UserMapper;
 import com.example.timer_backend.model.Role;
 import com.example.timer_backend.model.RoleName;
 import com.example.timer_backend.model.User;
+import com.example.timer_backend.producer.NotificationEventPublisher;
 import com.example.timer_backend.repository.RoleRepository;
 import com.example.timer_backend.repository.UserRepository;
 import com.example.timer_backend.service.UserService;
@@ -31,6 +33,7 @@ public class UserServiceImpl implements UserService {
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
     private final UserMapper userMapper;
+    private final NotificationEventPublisher notificationEventPublisher;
 
     @Override
     @Transactional
@@ -44,6 +47,12 @@ public class UserServiceImpl implements UserService {
 
         User user = userMapper.toEntity(request, passwordEncoder.encode(request.getPassword()), Set.of(userRole));
         User saved = userRepository.save(user);
+
+        NotificationRequestedEvent event = new NotificationRequestedEvent();
+        event.setUserId(saved.getId());
+        event.setEmail(request.getEmail());
+        event.setNotificationType("REGISTER");
+        notificationEventPublisher.publishNotificationRequest(event);
 
         return userMapper.toModel(saved);
     }

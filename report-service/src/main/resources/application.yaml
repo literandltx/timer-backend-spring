@@ -1,0 +1,28 @@
+spring:
+  application:
+    name: report-service
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      acks: all
+      retries: 3
+    consumer:
+      group-id: ${KAFKA_GROUP_ID:report-service-group}
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "*"
+        spring.json.use.type.headers: true
+        spring.json.type.mapping: "com.example.timer_backend.event.ReportRequestedEvent:com.literandltx.reportservice.event.ReportRequestedEvent"
+
+server:
+  port: 8081
+
+app:
+  kafka:
+    topics:
+      report: "report-topic"
+      core: "core-topic"

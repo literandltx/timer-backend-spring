@@ -1,6 +1,6 @@
 spring:
   application:
-    name: timer_backend
+    name: core-service
   profiles:
     default: dev
   servlet:
@@ -9,6 +9,21 @@ spring:
       max-request-size: 5MB
   datasource:
     driver-class-name: org.postgresql.Driver
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      acks: all
+      retries: 3
+    consumer:
+      group-id: ${KAFKA_GROUP_ID:core-service-group}
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "*"
+        spring.json.type.mapping: "com.literandltx.reportservice.event.ReportStatusEvent:com.example.timer_backend.event.ReportStatusEvent"
 
 jwt:
   expiration: 3000000
@@ -17,3 +32,11 @@ jwt:
 app:
   rate-limit:
     enabled: true
+  kafka:
+    topics:
+      notification: "notification-topic"
+      report: "report-topic"
+      core: "core-topic"
+
+server:
+  port: 8080

@@ -15,6 +15,7 @@ import com.example.timer_backend.repository.LabelRepository;
 import com.example.timer_backend.repository.UserRepository;
 import io.restassured.http.ContentType;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -33,6 +34,11 @@ public class AuthenticationControllerIT extends BaseIntegrationTest {
 
     private final String userEmail = "testuser@example.com";
     private final String userPlainPassword = "password";
+
+    @BeforeEach
+    void setUp() {
+        super.setUp();
+    }
 
     @AfterEach
     void tearDown() {
