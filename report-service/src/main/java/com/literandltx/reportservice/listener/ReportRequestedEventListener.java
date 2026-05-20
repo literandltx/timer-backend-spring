@@ -25,7 +25,7 @@ public class ReportRequestedEventListener {
         String s3Key = String.format("reports/%d/%s.txt", event.getUserId(), event.getReportId());
 
         try {
-            byte[] txtReportBytes = reportGeneratorService.generateTxtReport(event);
+            byte[] txtReportBytes = reportGeneratorService.generateReport(event);
             s3UploadService.uploadFile(s3Key, txtReportBytes);
 
             ReportStatusEvent successEvent = new ReportStatusEvent(
