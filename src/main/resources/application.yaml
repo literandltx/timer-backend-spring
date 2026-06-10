@@ -1,0 +1,12 @@
+spring:
+  application:
+    name: timer-backend-spring
+  profiles:
+    default: dev
+
+server:
+  port: 8080
+
+jwt:
+  expiration: 3000000
+  secret: secretsecretsecretsecretsecretsecret
