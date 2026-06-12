@@ -1,5 +1,7 @@
 package com.literandltx.timer.service.impl;
 
+import static com.literandltx.timer.validation.OwnershipValidator.validateOwnership;
+
 import com.literandltx.timer.dto.option.TimerOptionCreateRequestDto;
 import com.literandltx.timer.dto.option.TimerOptionResponseDto;
 import com.literandltx.timer.dto.option.TimerOptionUpdateRequestDto;
@@ -16,7 +18,6 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -39,7 +40,7 @@ public class TimerOptionServiceImpl implements TimerOptionService {
             log.info("Timer option already exists, skipping update.");
 
             TimerOption option = existingTimerOption.get();
-            validateTimerOptionOwnership(option, authUser);
+            validateOwnership(option, authUser);
 
             return timerOptionMapper.toResponseDto(option);
         }
@@ -76,7 +77,7 @@ public class TimerOptionServiceImpl implements TimerOptionService {
                 () -> new EntityNotFoundException("Timer option with id " + id + " not found")
         );
 
-        validateTimerOptionOwnership(existingOption, authUser);
+        validateOwnership(existingOption, authUser);
 
         existingOption.setValue(request.value());
 
@@ -100,21 +101,13 @@ public class TimerOptionServiceImpl implements TimerOptionService {
         TimerOption option = timerOptionRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Timer entry with id " + id + " not found"));
 
-        validateTimerOptionOwnership(option, authUser);
+        validateOwnership(option, authUser);
 
         option.setDeleted(true);
         option.setUpdatedAt(LocalDateTime.now());
         timerOptionRepository.save(option);
 
         log.info("Timer option with id: {} deleted successfully", id);
-    }
-
-    private void validateTimerOptionOwnership(TimerOption option, User authUser) {
-        if (!option.getUser().getId().equals(authUser.getId())) {
-            log.warn("Access denied: User {} tried to access timer option {} owned by user {}",
-                    authUser.getId(), option.getUuid(), option.getUser().getId());
-            throw new AccessDeniedException("User do not have permission to access this timer option");
-        }
     }
 
 }

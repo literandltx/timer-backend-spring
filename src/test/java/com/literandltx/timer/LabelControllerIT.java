@@ -98,7 +98,7 @@ public class LabelControllerIT extends BaseIntegrationTest {
                 .log().ifValidationFails()
                 .statusCode(HttpStatus.CREATED.value())
                 .body("uuid", notNullValue())
-                .body("name", equalTo("Work Projects"))
+                .body("name", equalTo("Work"))
                 .body("color", equalTo("#FF5733"));
     }
 

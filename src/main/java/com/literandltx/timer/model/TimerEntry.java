@@ -29,7 +29,7 @@ import lombok.experimental.SuperBuilder;
                 columnNames = {"user_id", "start_time"}
         )
 })
-public class TimerEntry extends SyncEntity {
+public class TimerEntry extends SyncEntity implements UserOwned {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "label_id", nullable = false)

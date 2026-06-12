@@ -28,7 +28,7 @@ import lombok.experimental.SuperBuilder;
                 columnNames = {"user_id", "name"}
         )
 })
-public class Label extends SyncEntity {
+public class Label extends SyncEntity implements UserOwned {
     @Column(name = "name", nullable = false)
     private String name;
 

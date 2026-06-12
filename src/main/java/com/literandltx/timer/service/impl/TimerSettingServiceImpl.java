@@ -1,5 +1,7 @@
 package com.literandltx.timer.service.impl;
 
+import static com.literandltx.timer.validation.OwnershipValidator.validateOwnership;
+
 import com.literandltx.timer.dto.settings.TimerSettingRequestDto;
 import com.literandltx.timer.dto.settings.TimerSettingResponseDto;
 import com.literandltx.timer.mapper.TimerSettingMapper;
@@ -14,7 +16,6 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -35,7 +36,7 @@ public class TimerSettingServiceImpl implements TimerSettingService {
         TimerOption option = timerOptionRepository.findById(request.timerOptionId())
                 .orElseThrow(() -> new IllegalArgumentException("Timer option not found"));
 
-        validateTimerOptionOwnership(option, authUser);
+        validateOwnership(option, authUser);
 
         Optional<TimerSetting> existingSetting = timerSettingRepository.findByUserId(authUser.getId());
         TimerSetting timerSetting;
@@ -73,11 +74,4 @@ public class TimerSettingServiceImpl implements TimerSettingService {
         return timerSettingMapper.toResponseDto(setting);
     }
 
-    private void validateTimerOptionOwnership(TimerOption option, User authUser) {
-        if (option.getUser() != null && !option.getUser().getId().equals(authUser.getId())) {
-            log.warn("Access denied: User {} tried to access timer option {} owned by user {}",
-                    authUser.getId(), option.getUuid(), option.getUser().getId());
-            throw new AccessDeniedException("User do not have permission to access this timer option");
-        }
-    }
 }

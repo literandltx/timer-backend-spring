@@ -28,7 +28,7 @@ import lombok.experimental.SuperBuilder;
                 columnNames = {"user_id", "timer_value"}
         )
 })
-public class TimerOption extends SyncEntity {
+public class TimerOption extends SyncEntity implements UserOwned {
     @Column(name = "timer_value", nullable = false)
     private Long value;
 

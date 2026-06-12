@@ -1,5 +1,7 @@
 package com.literandltx.timer.service.impl;
 
+import static com.literandltx.timer.validation.OwnershipValidator.validateOwnership;
+
 import com.literandltx.timer.dto.entry.TimerEntryCreateRequestDto;
 import com.literandltx.timer.dto.entry.TimerEntryResponseDto;
 import com.literandltx.timer.dto.entry.TimerEntryUpdateRequestDto;
@@ -18,7 +20,6 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -42,7 +43,7 @@ public class TimerEntryServiceImpl implements TimerEntryService {
             log.info("Timer entry already exists, skipping update.");
 
             TimerEntry entry = existingTimerEntry.get();
-            validateTimerEntryOwnership(entry, authUser);
+            validateOwnership(entry, authUser);
 
             return timerEntryMapper.toResponseDto(entry);
         }
@@ -84,14 +85,14 @@ public class TimerEntryServiceImpl implements TimerEntryService {
                 () -> new EntityNotFoundException("Timer entry with id " + id + " not found")
         );
 
-        validateTimerEntryOwnership(existingEntry, authUser);
+        validateOwnership(existingEntry, authUser);
 
         if (request.labelId() != null) {
             Label label = labelRepository.findById(request.labelId()).orElseThrow(
                     () -> new EntityNotFoundException("Label with id " + request.labelId() + " not found")
             );
 
-            validateLabelOwnership(label, authUser);
+            validateOwnership(label, authUser);
             existingEntry.setLabel(label);
         }
 
@@ -123,7 +124,7 @@ public class TimerEntryServiceImpl implements TimerEntryService {
         TimerEntry entry = timerEntryRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Timer entry with id " + id + " not found"));
 
-        validateTimerEntryOwnership(entry, authUser);
+        validateOwnership(entry, authUser);
 
         entry.setDeleted(true);
         entry.setUpdatedAt(LocalDateTime.now());
@@ -132,19 +133,4 @@ public class TimerEntryServiceImpl implements TimerEntryService {
         log.info("Timer entry with id: {} deleted successfully", id);
     }
 
-    private void validateTimerEntryOwnership(TimerEntry entry, User authUser) {
-        if (!entry.getUser().getId().equals(authUser.getId())) {
-            log.warn("Access denied: User {} tried to access timer entry {} owned by user {}",
-                    authUser.getId(), entry.getUuid(), entry.getUser().getId());
-            throw new AccessDeniedException("User do not have permission to access this timer entry");
-        }
-    }
-
-    private void validateLabelOwnership(Label label, User authUser) {
-        if (!label.getUser().getId().equals(authUser.getId())) {
-            log.warn("Access denied: User {} tried to assign label {} owned by user {}",
-                    authUser.getId(), label.getUuid(), label.getUser().getId());
-            throw new AccessDeniedException("User do not have permission to use this label");
-        }
-    }
 }

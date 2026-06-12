@@ -1,5 +1,7 @@
 package com.literandltx.timer.service.impl;
 
+import static com.literandltx.timer.validation.OwnershipValidator.validateOwnership;
+
 import com.literandltx.timer.dto.label.LabelCreateRequestDto;
 import com.literandltx.timer.dto.label.LabelResponseDto;
 import com.literandltx.timer.dto.label.LabelUpdateRequestDto;
@@ -16,7 +18,6 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -39,7 +40,7 @@ public class LabelServiceImpl implements LabelService {
             log.info("Label already exists, skipping update.");
 
             Label label = existingLabel.get();
-            validateLabelOwnership(label, authUser);
+            validateOwnership(label, authUser);
 
             return labelMapper.toResponseDto(label);
         }
@@ -76,7 +77,7 @@ public class LabelServiceImpl implements LabelService {
                 () -> new EntityNotFoundException("Label with id " + id + " not found")
         );
 
-        validateLabelOwnership(existingLabel, authUser);
+        validateOwnership(existingLabel, authUser);
 
         existingLabel.setName(request.name());
         existingLabel.setColor(request.color());
@@ -101,7 +102,7 @@ public class LabelServiceImpl implements LabelService {
         Label label = labelRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Label with id " + id + " not found"));
 
-        validateLabelOwnership(label, authUser);
+        validateOwnership(label, authUser);
 
         label.setDeleted(true);
         label.setUpdatedAt(LocalDateTime.now());
@@ -109,11 +110,4 @@ public class LabelServiceImpl implements LabelService {
         log.info("Label with id: {} deleted successfully", id);
     }
 
-    private void validateLabelOwnership(Label label, User authUser) {
-        if (!label.getUser().getId().equals(authUser.getId())) {
-            log.warn("Access denied: User {} tried to access label {} owned by user {}",
-                    authUser.getId(), label.getUuid(), label.getUser().getId());
-            throw new AccessDeniedException("You do not have permission to access this label");
-        }
-    }
 }

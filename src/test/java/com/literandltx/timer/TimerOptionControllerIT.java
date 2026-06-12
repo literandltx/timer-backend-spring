@@ -92,7 +92,7 @@ public class TimerOptionControllerIT extends BaseIntegrationTest {
                 .header("Authorization", "Bearer " + authToken)
                 .body(request)
                 .when()
-                .post()
+                .post("/api/v1/timer-options")
                 .then()
                 .log().ifValidationFails()
                 .statusCode(HttpStatus.CREATED.value())
