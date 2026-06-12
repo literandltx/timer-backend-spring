@@ -7,6 +7,7 @@ import com.literandltx.timer.service.TimerSettingService;
 import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -38,6 +39,12 @@ public class TimerSettingController {
             @AuthenticationPrincipal User user
     ) {
         TimerSettingResponseDto response = timerSettingService.find(updatedAfter, user);
+
+        if (response == null) {
+            return ResponseEntity.status(HttpStatus.NOT_MODIFIED).build();
+        }
+
         return ResponseEntity.ok(response);
     }
+
 }

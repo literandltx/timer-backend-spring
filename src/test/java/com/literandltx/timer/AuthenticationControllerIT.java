@@ -182,7 +182,7 @@ public class AuthenticationControllerIT extends BaseIntegrationTest {
                 .then()
                 .log().ifValidationFails()
                 .statusCode(HttpStatus.CONFLICT.value())
-                .body("message", equalTo("Unable to complete registration. User already exists."));
+                .body("message", equalTo("The email address '" + userEmail + "' is already in use."));
     }
 
     @Test
