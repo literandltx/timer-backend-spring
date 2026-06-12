@@ -1,5 +1,6 @@
 package com.literandltx.timer.model;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -9,6 +10,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import java.util.Collection;
 import java.util.HashSet;
@@ -38,6 +40,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 @SQLRestriction("is_deleted=false")
 @Table(name = "users")
 public class User implements UserDetails {
+
     @Id
     @ToString.Include
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -54,6 +57,9 @@ public class User implements UserDetails {
     @Builder.Default
     @Column(name = "is_deleted", nullable = false)
     private boolean isDeleted = false;
+
+    @OneToOne(mappedBy = "user", cascade = CascadeType.REMOVE)
+    private TimerSetting timerSetting;
 
     @Builder.Default
     @ManyToMany(fetch = FetchType.EAGER)
@@ -99,4 +105,5 @@ public class User implements UserDetails {
     public boolean isEnabled() {
         return true;
     }
+
 }

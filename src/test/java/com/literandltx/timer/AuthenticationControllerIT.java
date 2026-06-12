@@ -42,6 +42,7 @@ public class AuthenticationControllerIT extends BaseIntegrationTest {
 
     @AfterEach
     void tearDown() {
+        super.tearDown();
         jdbcTemplate.execute("DELETE FROM users_roles");
         jdbcTemplate.execute("DELETE FROM users");
     }

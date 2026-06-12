@@ -27,6 +27,7 @@ import org.hibernate.annotations.SQLRestriction;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Role {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -54,4 +55,5 @@ public class Role {
     public int hashCode() {
         return Objects.hash(name);
     }
+
 }
