@@ -12,10 +12,8 @@ import com.literandltx.timer.repository.TimerOptionRepository;
 import com.literandltx.timer.repository.TimerSettingRepository;
 import com.literandltx.timer.service.TimerSettingService;
 import jakarta.persistence.EntityNotFoundException;
-
 import java.time.LocalDateTime;
 import java.util.Optional;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -53,6 +51,7 @@ public class TimerSettingServiceImpl implements TimerSettingService {
         }
 
         timerSetting.setPreference(option);
+        timerSetting.setLastUpdated(System.currentTimeMillis());
         timerSetting.setUpdatedAt(LocalDateTime.now());
 
         TimerSetting savedSetting = timerSettingRepository.save(timerSetting);
