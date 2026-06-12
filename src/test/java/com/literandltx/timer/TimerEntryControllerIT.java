@@ -34,6 +34,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 public class TimerEntryControllerIT extends BaseIntegrationTest {
 
+    private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
+
     @Autowired
     private UserRepository userRepository;
 
@@ -133,8 +135,8 @@ public class TimerEntryControllerIT extends BaseIntegrationTest {
                 .body("labelId", equalTo(defaultLabel.getUuid().toString()))
                 .body("startTime", equalTo(startTimeMs))
                 .body("durationSeconds", equalTo(durationSeconds.intValue()))
-                .body("createdAt", equalTo(now.toString()))
-                .body("updatedAt", equalTo(now.toString()))
+                .body("createdAt", equalTo(now.format(FORMATTER)))
+                .body("updatedAt", equalTo(now.format(FORMATTER)))
                 .body("deleted", equalTo(false));
     }
 
@@ -275,8 +277,8 @@ public class TimerEntryControllerIT extends BaseIntegrationTest {
                 .statusCode(HttpStatus.OK.value())
                 .body("uuid", equalTo(savedEntry.getUuid().toString()))
                 .body("durationSeconds", equalTo(updatedDuration.intValue()))
-                .body("createdAt", equalTo(now.toString()))
-                .body("updatedAt", equalTo(future.toString()))
+                .body("createdAt", equalTo(now.format(FORMATTER)))
+                .body("updatedAt", equalTo(future.format(FORMATTER)))
                 .body("deleted", equalTo(false));
     }
 
@@ -327,7 +329,7 @@ public class TimerEntryControllerIT extends BaseIntegrationTest {
                 .log().ifValidationFails()
                 .statusCode(HttpStatus.OK.value())
                 .body("labelId", equalTo(savedLabel.getUuid().toString()))
-                .body("updatedAt", equalTo(future.toString()));
+                .body("updatedAt", equalTo(future.format(FORMATTER)));
     }
 
     @Test
