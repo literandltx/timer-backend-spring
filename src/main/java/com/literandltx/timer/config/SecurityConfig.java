@@ -27,6 +27,7 @@ public class SecurityConfig {
 
     private static final String[] AUTH_WHITE_LIST = {
             "/api/v1/auth/**",
+            "/api/v1/system/ping/public",
             "/actuator/health",
             "/v3/api-docs/**",
             "/v2/api-docs/**",
@@ -62,10 +63,9 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(AUTH_WHITE_LIST)
-                        .permitAll()
-                        .anyRequest()
-                        .authenticated())
+                        .requestMatchers(AUTH_WHITE_LIST).permitAll()
+                        .requestMatchers("/api/v1/system/ping/admin").hasRole("ADMIN")
+                        .anyRequest().authenticated())
                 .httpBasic(withDefaults())
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

@@ -10,3 +10,13 @@ server:
 jwt:
   expiration: 3000000
   secret: secretsecretsecretsecretsecretsecret
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: when_authorized
+      roles: ADMIN
