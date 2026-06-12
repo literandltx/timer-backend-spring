@@ -220,8 +220,8 @@ public class LabelControllerIT extends BaseIntegrationTest {
         String labelColor = "#FF0000";
         String updatedLabelName = "Updated Label";
         String updatedLabelColor = "#FFFF00";
-        LocalDateTime now = LocalDateTime.now();
-        LocalDateTime future = LocalDateTime.now().plusHours(1);
+        LocalDateTime now = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
+        LocalDateTime future = now.plusHours(1);
 
         Label originalLabel = Label.builder()
                 .uuid(UUID.randomUUID())
