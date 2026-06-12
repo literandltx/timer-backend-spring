@@ -22,6 +22,7 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
+
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
@@ -30,17 +31,23 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public UserRegistrationResponseDto register(UserRegistrationRequestDto request) {
-        if (userRepository.existsByEmail(request.getEmail())) {
-            throw new UserAlreadyExistsException("Unable to complete registration. User already exists.");
-        }
+        log.info("Attempting to register new user with email: {}", request.getEmail());
+
+        checkEmailAvailability(request.getEmail());
 
         Role userRole = roleRepository.findByName(RoleName.USER)
-                .orElseThrow(() -> new RuntimeException("Error: Role not found."));
+                .orElseThrow(() -> new EntityNotFoundException("Role '" + RoleName.USER + "' not found in the database."));
 
-        User user = userMapper.toEntity(request, passwordEncoder.encode(request.getPassword()), Set.of(userRole));
-        User saved = userRepository.save(user);
+        User user = userMapper.toEntity(
+                request,
+                passwordEncoder.encode(request.getPassword()),
+                Set.of(userRole)
+        );
 
-        return userMapper.toModel(saved);
+        User savedUser = userRepository.save(user);
+        log.info("User registered with id: {} and email: {}", savedUser.getId(), savedUser.getEmail());
+
+        return userMapper.toModel(savedUser);
     }
 
     private User getUserOrThrow(Long id) {
@@ -50,8 +57,8 @@ public class UserServiceImpl implements UserService {
     }
 
     private void checkEmailAvailability(String email) {
-        if (userRepository.findByEmail(email).isPresent()) {
-            log.warn("Email change failed. Email '{}' is already in use.", email);
+        if (userRepository.existsByEmail(email)) {
+            log.warn("Operation failed. The email '{}' is already in use.", email);
             throw new UserAlreadyExistsException("The email address '" + email + "' is already in use.");
         }
     }
