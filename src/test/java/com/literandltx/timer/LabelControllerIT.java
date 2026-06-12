@@ -8,16 +8,19 @@ import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.literandltx.timer.dto.label.LabelCreateRequestDto;
+import com.literandltx.timer.dto.label.LabelUpdateRequestDto;
 import com.literandltx.timer.dto.user.UserLoginRequestDto;
 import com.literandltx.timer.model.Label;
 import com.literandltx.timer.model.User;
 import com.literandltx.timer.repository.LabelRepository;
 import com.literandltx.timer.repository.UserRepository;
 import io.restassured.http.ContentType;
+import io.restassured.response.Response;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -80,169 +83,255 @@ public class LabelControllerIT extends BaseIntegrationTest {
 
     @Test
     void shouldCreateLabel_WhenUserIsAuthenticated() {
-        UUID newLabelId = UUID.randomUUID();
+        // 1. Arrange
+        LocalDateTime now = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
+        String labelName = "Label 1";
+        String labelColor = "#FF5733";
 
-        Map<String, Object> request = Map.of(
-                "uuid", newLabelId,
-                "name", "Work",
-                "color", "#FF5733"
-        );
+        LabelCreateRequestDto request = LabelCreateRequestDto.builder()
+                .uuid(UUID.randomUUID())
+                .name(labelName)
+                .color(labelColor)
+                .createdAt(now)
+                .updatedAt(now)
+                .build();
 
-        given()
+        // 2. Act
+        Response response = given()
                 .contentType(ContentType.JSON)
                 .header("Authorization", "Bearer " + authToken)
                 .body(request)
                 .when()
-                .post("/api/v1/labels")
-                .then()
+                .post("/api/v1/labels");
+
+        // 3. Assert
+        response.then()
                 .log().ifValidationFails()
                 .statusCode(HttpStatus.CREATED.value())
                 .body("uuid", notNullValue())
-                .body("name", equalTo("Work"))
-                .body("color", equalTo("#FF5733"));
+                .body("name", equalTo(labelName))
+                .body("color", equalTo(labelColor))
+                .body("createdAt", equalTo(now.toString()))
+                .body("updatedAt", equalTo(now.toString()))
+                .body("deleted", equalTo(false));
     }
 
     @Test
     void shouldReturnAllActiveLabels_WhenNoUpdatedAfterIsProvided() {
-        Label label1 = new Label();
-        label1.setUuid(UUID.randomUUID());
-        label1.setName("Active Work");
-        label1.setColor("#FF0000");
-        label1.setUser(testUser);
-        label1.setDeleted(false);
+        // 1. Arrange
+        String labelName1 = "Label 1";
+        String labelName2 = "Label 2";
+        String labelColor1 = "#FF0000";
+        String labelColor2 = "#FFFF00";
+        LocalDateTime now = LocalDateTime.now();
 
-        Label label2 = new Label();
-        label2.setUuid(UUID.randomUUID());
-        label2.setName("Deleted Work");
-        label2.setColor("#000000");
-        label2.setUser(testUser);
-        label2.setDeleted(true);
+        Label label1 = Label.builder()
+                .uuid(UUID.randomUUID())
+                .name(labelName1)
+                .color(labelColor1)
+                .user(testUser)
+                .createdAt(now)
+                .updatedAt(now)
+                .isDeleted(false)
+                .build();
+
+        Label label2 = Label.builder()
+                .uuid(UUID.randomUUID())
+                .name(labelName2)
+                .color(labelColor2)
+                .user(testUser)
+                .createdAt(now.plusHours(1))
+                .updatedAt(now.plusHours(1))
+                .isDeleted(true)
+                .build();
 
         labelRepository.saveAll(List.of(label1, label2));
 
-        given()
+        // 2. Act
+        Response response = given()
                 .contentType(ContentType.JSON)
                 .header("Authorization", "Bearer " + authToken)
                 .when()
-                .get("/api/v1/labels")
-                .then()
+                .get("/api/v1/labels");
+
+        // 3. Assert
+        response.then()
                 .log().ifValidationFails()
                 .statusCode(HttpStatus.OK.value())
                 .body("$", hasSize(1))
-                .body("name", hasItem("Active Work"))
-                .body("name", not(hasItem("Deleted Work")));
+                .body("name", hasItem(labelName1))
+                .body("name", not(hasItem(labelName2)));
     }
 
     @Test
     void shouldReturnDeltaUpdates_WhenUpdatedAfterIsProvided() {
-        LocalDateTime past = LocalDateTime.now().minusDays(5);
-        LocalDateTime future = LocalDateTime.now().plusDays(5);
+        // 1. Arrange
+        String labelName1 = "Label 1";
+        String labelName2 = "Label 2";
+        String labelColor1 = "#FF0000";
+        String labelColor2 = "#FFFF00";
+        LocalDateTime past = LocalDateTime.now().minusDays(1);
 
-        Label oldLabel = new Label();
-        oldLabel.setUuid(UUID.randomUUID());
-        oldLabel.setColor("red");
-        oldLabel.setName("Old Task");
-        oldLabel.setUpdatedAt(past);
-        oldLabel.setUser(testUser);
+        Label newLabel = Label.builder()
+                .uuid(UUID.randomUUID())
+                .name(labelName1)
+                .color(labelColor1)
+                .user(testUser)
+                .createdAt(past)
+                .updatedAt(past)
+                .isDeleted(false)
+                .build();
 
-        Label newLabel = new Label();
-        newLabel.setUuid(UUID.randomUUID());
-        newLabel.setColor("blue");
-        newLabel.setName("New Task");
-        newLabel.setUpdatedAt(future);
-        newLabel.setUser(testUser);
+        Label oldLabel = Label.builder()
+                .uuid(UUID.randomUUID())
+                .name(labelName2)
+                .color(labelColor2)
+                .user(testUser)
+                .createdAt(past)
+                .updatedAt(past.plusDays(2))
+                .isDeleted(false)
+                .build();
 
         labelRepository.saveAll(List.of(oldLabel, newLabel));
 
+        // 2. Act
         String isoDate = LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME);
-
-        given()
+        Response response = given()
                 .contentType(ContentType.JSON)
                 .header("Authorization", "Bearer " + authToken)
                 .queryParam("updatedAfter", isoDate)
                 .when()
-                .get("/api/v1/labels")
-                .then()
+                .get("/api/v1/labels");
+
+        // 3. Assert
+        response.then()
                 .log().ifValidationFails()
                 .statusCode(HttpStatus.OK.value())
                 .body("$", hasSize(1))
-                .body("name", hasItem("New Task"));
+                .body("name", not(hasItem(labelName1)))
+                .body("name", hasItem(labelName2));
     }
 
     @Test
     void shouldUpdateLabel_WhenUserIsAuthenticated_AndLabelExists() {
-        Label originalLabel = new Label();
-        originalLabel.setUuid(UUID.randomUUID());
-        originalLabel.setName("Original Name");
-        originalLabel.setColor("#000000");
-        originalLabel.setUser(testUser);
+        // 1. Arrange
+        String labelName = "Label";
+        String labelColor = "#FF0000";
+        String updatedLabelName = "Updated Label";
+        String updatedLabelColor = "#FFFF00";
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime future = LocalDateTime.now().plusHours(1);
+
+        Label originalLabel = Label.builder()
+                .uuid(UUID.randomUUID())
+                .name(labelName)
+                .color(labelColor)
+                .user(testUser)
+                .createdAt(now)
+                .updatedAt(now)
+                .isDeleted(false)
+                .build();
+
         Label savedLabel = labelRepository.save(originalLabel);
 
-        Map<String, Object> updateRequest = Map.of(
-                "name", "Updated Name",
-                "color", "#FFFFFF"
-        );
+        LabelUpdateRequestDto request = LabelUpdateRequestDto.builder()
+                .name(updatedLabelName)
+                .color(updatedLabelColor)
+                .updatedAt(future)
+                .build();
 
-        given()
+        // 2. Act
+        Response response = given()
                 .contentType(ContentType.JSON)
                 .header("Authorization", "Bearer " + authToken)
-                .body(updateRequest)
+                .body(request)
                 .when()
-                .put("/api/v1/labels/{id}", savedLabel.getUuid())
-                .then()
+                .put("/api/v1/labels/{id}", savedLabel.getUuid());
+
+        // 3. Assert
+        response.then()
                 .log().ifValidationFails()
                 .statusCode(HttpStatus.OK.value())
-                .body("uuid", equalTo(savedLabel.getUuid().toString()))
-                .body("name", equalTo("Updated Name"))
-                .body("color", equalTo("#FFFFFF"));
+                .body("uuid", notNullValue())
+                .body("name", equalTo(updatedLabelName))
+                .body("color", equalTo(updatedLabelColor))
+                .body("createdAt", equalTo(now.toString()))
+                .body("updatedAt", equalTo(future.toString()))
+                .body("deleted", equalTo(false));
     }
 
     @Test
     void shouldReturnForbidden_WhenUpdatingLabelBelongingToAnotherUser() {
-        User victimUser = new User();
-        victimUser.setEmail("victim@example.com");
-        victimUser.setPassword(passwordEncoder.encode("password"));
+        // 1. Arrange
+        String victimLabelName = "Label";
+        String victimLabelColor = "#FF0000";
+        String adversaryLabelName = "Adversary Label";
+        String adversaryLabelColor = "#FFFF00";
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime future = LocalDateTime.now().plusHours(1);
+
+        User victimUser = User.builder()
+                .email("victim@example.com")
+                .password(passwordEncoder.encode("password"))
+                .build();
         userRepository.save(victimUser);
 
-        Label victimLabel = new Label();
-        victimLabel.setUuid(UUID.randomUUID());
-        victimLabel.setName("Victim's Secret");
-        victimLabel.setColor("#000000");
-        victimLabel.setUser(victimUser);
+        Label victimLabel = Label.builder()
+                .uuid(UUID.randomUUID())
+                .name(victimLabelName)
+                .color(victimLabelColor)
+                .user(victimUser)
+                .createdAt(now)
+                .updatedAt(now)
+                .isDeleted(false)
+                .build();
         Label savedVictimLabel = labelRepository.save(victimLabel);
 
-        Map<String, Object> updateRequest = Map.of(
-                "name", "Hacked Name",
-                "color", "#FF0000"
-        );
+        LabelUpdateRequestDto request = LabelUpdateRequestDto.builder()
+                .name(adversaryLabelName)
+                .color(adversaryLabelColor)
+                .updatedAt(future)
+                .build();
 
-        given()
+        // 2. Act
+        Response response = given()
                 .contentType(ContentType.JSON)
                 .header("Authorization", "Bearer " + authToken)
-                .body(updateRequest)
+                .body(request)
                 .when()
-                .put("/api/v1/labels/{id}", savedVictimLabel.getUuid())
-                .then()
+                .put("/api/v1/labels/{id}", savedVictimLabel.getUuid());
+
+        // 3. Assert
+        response.then()
                 .log().ifValidationFails()
                 .statusCode(HttpStatus.FORBIDDEN.value());
     }
 
     @Test
     void shouldSoftDeleteLabel_WhenUserIsAuthenticated_AndOwnsLabel() {
-        Label label = new Label();
-        label.setUuid(UUID.randomUUID());
-        label.setName("To Be Deleted");
-        label.setColor("#000000");
-        label.setUser(testUser);
-        label.setDeleted(false);
+        // 1. Arrange
+        LocalDateTime now = LocalDateTime.now();
+
+        Label label = Label.builder()
+                .uuid(UUID.randomUUID())
+                .name("To Be Deleted")
+                .color("#000000")
+                .user(testUser)
+                .createdAt(now)
+                .updatedAt(now)
+                .isDeleted(false)
+                .build();
         Label savedLabel = labelRepository.save(label);
 
-        given()
+        // 2. Act
+        Response response = given()
                 .contentType(ContentType.JSON)
                 .header("Authorization", "Bearer " + authToken)
                 .when()
-                .delete("/api/v1/labels/{id}", savedLabel.getUuid())
-                .then()
+                .delete("/api/v1/labels/{id}", savedLabel.getUuid());
+
+        // 3. Assert
+        response.then()
                 .log().ifValidationFails()
                 .statusCode(HttpStatus.NO_CONTENT.value());
 
@@ -252,14 +341,18 @@ public class LabelControllerIT extends BaseIntegrationTest {
 
     @Test
     void shouldReturnNotFound_WhenDeletingNonExistentLabel() {
+        // 1. Arrange
         UUID nonExistentId = UUID.randomUUID();
 
-        given()
+        // 2. Act
+        Response response = given()
                 .contentType(ContentType.JSON)
                 .header("Authorization", "Bearer " + authToken)
                 .when()
-                .delete("/api/v1/labels/{id}", nonExistentId)
-                .then()
+                .delete("/api/v1/labels/{id}", nonExistentId);
+
+        // 3. Assert
+        response.then()
                 .log().ifValidationFails()
                 .statusCode(HttpStatus.NOT_FOUND.value());
     }
