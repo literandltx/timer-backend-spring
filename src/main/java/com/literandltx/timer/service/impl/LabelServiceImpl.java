@@ -79,8 +79,7 @@ public class LabelServiceImpl implements LabelService {
 
         validateOwnership(existingLabel, authUser);
 
-        existingLabel.setName(request.name());
-        existingLabel.setColor(request.color());
+        labelMapper.updateLabelFromDto(request, existingLabel);
 
         if (request.updatedAt() != null) {
             existingLabel.setUpdatedAt(request.updatedAt());
