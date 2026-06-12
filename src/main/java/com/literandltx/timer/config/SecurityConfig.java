@@ -24,6 +24,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 @RequiredArgsConstructor
 @Configuration
 public class SecurityConfig {
+
     private static final String[] AUTH_WHITE_LIST = {
             "/api/v1/auth/**",
             "/actuator/health",
@@ -32,6 +33,20 @@ public class SecurityConfig {
             "/swagger-ui/**",
             "/swagger-resources/**"
     };
+
+    private static final List<String> ALLOWED_ORIGINS = List.of(
+            "http://localhost:3000",
+            "http://localhost:4200",
+            "http://localhost:5173"
+    );
+
+    private static final List<String> ALLOWED_METHODS = List.of(
+            "GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"
+    );
+
+    private static final List<String> ALLOWED_HEADERS = List.of(
+            "Authorization", "Content-Type", "X-Requested-With", "Accept"
+    );
 
     private final UserDetailsService userDetailsService;
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
@@ -42,7 +57,7 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) {
+    public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
         httpSecurity
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(AbstractHttpConfigurer::disable)
@@ -52,8 +67,8 @@ public class SecurityConfig {
                         .anyRequest()
                         .authenticated())
                 .httpBasic(withDefaults())
-                .sessionManagement((session ->
-                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)))
+                .sessionManagement(session ->
+                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return httpSecurity
@@ -62,7 +77,7 @@ public class SecurityConfig {
     }
 
     @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) {
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
         return authenticationConfiguration.getAuthenticationManager();
     }
 
@@ -70,9 +85,9 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        configuration.setAllowedOrigins(List.of("http://localhost:3000", "http://localhost:4200", "http://localhost:5173"));
-        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
-        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-Requested-With", "Accept"));
+        configuration.setAllowedOrigins(ALLOWED_ORIGINS);
+        configuration.setAllowedMethods(ALLOWED_METHODS);
+        configuration.setAllowedHeaders(ALLOWED_HEADERS);
         configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
