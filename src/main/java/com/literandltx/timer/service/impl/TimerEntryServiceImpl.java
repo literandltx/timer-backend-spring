@@ -50,10 +50,13 @@ public class TimerEntryServiceImpl implements TimerEntryService {
 
         TimerEntry timerEntry = timerEntryMapper.toTimerEntry(request, authUser);
 
-        Label label = labelRepository.findById(request.labelId())
-                .orElseThrow(() -> new IllegalArgumentException("Label not found"));
-        timerEntry.setLabel(label);
-        
+        if (request.labelId() != null) {
+            Label label = labelRepository.findById(request.labelId())
+                    .orElseThrow(() -> new EntityNotFoundException("Label with id " + request.labelId() + " not found"));
+            validateOwnership(label, authUser);
+            timerEntry.setLabel(label);
+        }
+
         TimerEntry savedEntry = timerEntryRepository.save(timerEntry);
 
         return timerEntryMapper.toResponseDto(savedEntry);
@@ -81,27 +84,20 @@ public class TimerEntryServiceImpl implements TimerEntryService {
     public TimerEntryResponseDto update(UUID id, TimerEntryUpdateRequestDto request, User authUser) {
         log.info("Updating timer entry with id: {} for user id: {}", id, authUser.getId());
 
-        TimerEntry existingEntry = timerEntryRepository.findById(id).orElseThrow(
-                () -> new EntityNotFoundException("Timer entry with id " + id + " not found")
-        );
+        TimerEntry existingEntry = timerEntryRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Timer entry with id " + id + " not found"));
 
         validateOwnership(existingEntry, authUser);
 
         if (request.labelId() != null) {
-            Label label = labelRepository.findById(request.labelId()).orElseThrow(
-                    () -> new EntityNotFoundException("Label with id " + request.labelId() + " not found")
-            );
+            Label label = labelRepository.findById(request.labelId())
+                    .orElseThrow(() -> new EntityNotFoundException("Label with id " + request.labelId() + " not found"));
 
             validateOwnership(label, authUser);
             existingEntry.setLabel(label);
         }
 
-        if (request.durationSeconds() != null) {
-            existingEntry.setDurationSeconds(request.durationSeconds());
-        }
-        if (request.startTime() != null) {
-            existingEntry.setStartTime(request.startTime());
-        }
+        timerEntryMapper.updateEntryFromDto(request, existingEntry);
 
         if (request.updatedAt() != null) {
             existingEntry.setUpdatedAt(request.updatedAt());
