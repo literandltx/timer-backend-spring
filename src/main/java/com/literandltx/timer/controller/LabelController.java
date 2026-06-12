@@ -68,4 +68,5 @@ public class LabelController {
         labelService.delete(id, user);
         return ResponseEntity.noContent().build();
     }
+
 }
