@@ -29,10 +29,12 @@ import lombok.experimental.SuperBuilder;
         )
 })
 public class TimerOption extends SyncEntity implements UserOwned {
+
     @Column(name = "timer_value", nullable = false)
     private Long value;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
+
 }

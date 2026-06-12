@@ -29,6 +29,7 @@ import lombok.experimental.SuperBuilder;
         )
 })
 public class Label extends SyncEntity implements UserOwned {
+
     @Column(name = "name", nullable = false)
     private String name;
 
@@ -38,4 +39,5 @@ public class Label extends SyncEntity implements UserOwned {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
+
 }

@@ -46,4 +46,5 @@ public abstract class SyncEntity {
             this.updatedAt = this.createdAt;
         }
     }
+
 }

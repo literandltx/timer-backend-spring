@@ -24,6 +24,7 @@ import lombok.experimental.SuperBuilder;
 @Entity
 @Table(name = "timer_settings")
 public class TimerSetting extends SyncEntity implements UserOwned {
+
     @ManyToOne
     @JoinColumn(name = "active_option_id", nullable = false)
     private TimerOption preference;
@@ -34,4 +35,5 @@ public class TimerSetting extends SyncEntity implements UserOwned {
     @OneToOne
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
+
 }
