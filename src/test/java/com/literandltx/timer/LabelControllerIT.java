@@ -53,9 +53,10 @@ public class LabelControllerIT extends BaseIntegrationTest {
     void setUpUser() {
         super.setUp();
 
-        testUser = new User();
-        testUser.setEmail(userEmail);
-        testUser.setPassword(passwordEncoder.encode(userPlainPassword));
+        testUser = User.builder()
+                .email(userEmail)
+                .password(passwordEncoder.encode(userPlainPassword))
+                .build();
         userRepository.save(testUser);
 
         UserLoginRequestDto loginRequest = new UserLoginRequestDto();

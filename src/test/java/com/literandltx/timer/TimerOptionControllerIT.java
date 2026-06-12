@@ -8,16 +8,19 @@ import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.literandltx.timer.dto.option.TimerOptionCreateRequestDto;
+import com.literandltx.timer.dto.option.TimerOptionUpdateRequestDto;
 import com.literandltx.timer.dto.user.UserLoginRequestDto;
 import com.literandltx.timer.model.TimerOption;
 import com.literandltx.timer.model.User;
 import com.literandltx.timer.repository.TimerOptionRepository;
 import com.literandltx.timer.repository.UserRepository;
 import io.restassured.http.ContentType;
+import io.restassured.response.Response;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -50,9 +53,10 @@ public class TimerOptionControllerIT extends BaseIntegrationTest {
     void setUpUser() {
         super.setUp();
 
-        testUser = new User();
-        testUser.setEmail(userEmail);
-        testUser.setPassword(passwordEncoder.encode(userPlainPassword));
+        testUser = User.builder()
+                .email(userEmail)
+                .password(passwordEncoder.encode(userPlainPassword))
+                .build();
         userRepository.save(testUser);
 
         UserLoginRequestDto loginRequest = new UserLoginRequestDto();
@@ -80,157 +84,235 @@ public class TimerOptionControllerIT extends BaseIntegrationTest {
 
     @Test
     void shouldCreateTimerOption_WhenUserIsAuthenticated() {
-        UUID newOptionId = UUID.randomUUID();
+        // 1. Arrange
+        LocalDateTime now = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
+        Long optionValue = 25L;
 
-        Map<String, Object> request = Map.of(
-                "uuid", newOptionId,
-                "value", 25 
-        );
+        TimerOptionCreateRequestDto request = TimerOptionCreateRequestDto.builder()
+                .uuid(UUID.randomUUID())
+                .value(optionValue)
+                .createdAt(now)
+                .updatedAt(now)
+                .build();
 
-        given()
+        // 2. Act
+        Response response = given()
                 .contentType(ContentType.JSON)
                 .header("Authorization", "Bearer " + authToken)
                 .body(request)
                 .when()
-                .post("/api/v1/timer-options")
-                .then()
+                .post("/api/v1/timer-options");
+
+        // 3. Assert
+        response.then()
                 .log().ifValidationFails()
                 .statusCode(HttpStatus.CREATED.value())
                 .body("uuid", notNullValue())
-                .body("value", equalTo(25));
+                .body("value", equalTo(optionValue.intValue()))
+                .body("createdAt", equalTo(now.toString()))
+                .body("updatedAt", equalTo(now.toString()))
+                .body("deleted", equalTo(false));
     }
 
     @Test
     void shouldReturnAllActiveTimerOptions_WhenNoUpdatedAfterIsProvided() {
-        TimerOption option1 = new TimerOption();
-        option1.setUuid(UUID.randomUUID());
-        option1.setValue(15L);
-        option1.setUser(testUser);
-        option1.setDeleted(false);
+        // 1. Arrange
+        Long value1 = 15L;
+        Long value2 = 45L;
+        LocalDateTime now = LocalDateTime.now();
 
-        TimerOption option2 = new TimerOption();
-        option2.setUuid(UUID.randomUUID());
-        option2.setValue(45L);
-        option2.setUser(testUser);
-        option2.setDeleted(true);
+        TimerOption option1 = TimerOption.builder()
+                .uuid(UUID.randomUUID())
+                .value(value1)
+                .user(testUser)
+                .createdAt(now)
+                .updatedAt(now)
+                .isDeleted(false)
+                .build();
+
+        TimerOption option2 = TimerOption.builder()
+                .uuid(UUID.randomUUID())
+                .value(value2)
+                .user(testUser)
+                .createdAt(now.plusHours(1))
+                .updatedAt(now.plusHours(1))
+                .isDeleted(true)
+                .build();
 
         timerOptionRepository.saveAll(List.of(option1, option2));
 
-        given()
+        // 2. Act
+        Response response = given()
                 .contentType(ContentType.JSON)
                 .header("Authorization", "Bearer " + authToken)
                 .when()
-                .get("/api/v1/timer-options")
-                .then()
+                .get("/api/v1/timer-options");
+
+        // 3. Assert
+        response.then()
                 .log().ifValidationFails()
                 .statusCode(HttpStatus.OK.value())
                 .body("$", hasSize(1))
-                .body("value", hasItem(15))
-                .body("value", not(hasItem(45)));
+                .body("value", hasItem(value1.intValue()))
+                .body("value", not(hasItem(value2.intValue())));
     }
 
     @Test
     void shouldReturnDeltaUpdates_WhenUpdatedAfterIsProvided() {
+        // 1. Arrange
+        Long oldValue = 10L;
+        Long newValue = 60L;
         LocalDateTime past = LocalDateTime.now().minusDays(5);
         LocalDateTime future = LocalDateTime.now().plusDays(5);
 
-        TimerOption oldOption = new TimerOption();
-        oldOption.setUuid(UUID.randomUUID());
-        oldOption.setValue(10L);
-        oldOption.setUpdatedAt(past);
-        oldOption.setUser(testUser);
+        TimerOption newOption = TimerOption.builder()
+                .uuid(UUID.randomUUID())
+                .value(newValue)
+                .user(testUser)
+                .createdAt(past)
+                .updatedAt(future)
+                .isDeleted(false)
+                .build();
 
-        TimerOption newOption = new TimerOption();
-        newOption.setUuid(UUID.randomUUID());
-        newOption.setValue(60L);
-        newOption.setUpdatedAt(future);
-        newOption.setUser(testUser);
+        TimerOption oldOption = TimerOption.builder()
+                .uuid(UUID.randomUUID())
+                .value(oldValue)
+                .user(testUser)
+                .createdAt(past)
+                .updatedAt(past)
+                .isDeleted(false)
+                .build();
 
         timerOptionRepository.saveAll(List.of(oldOption, newOption));
 
+        // 2. Act
         String isoDate = LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME);
-
-        given()
+        Response response = given()
                 .contentType(ContentType.JSON)
                 .header("Authorization", "Bearer " + authToken)
                 .queryParam("updatedAfter", isoDate)
                 .when()
-                .get("/api/v1/timer-options")
-                .then()
+                .get("/api/v1/timer-options");
+
+        // 3. Assert
+        response.then()
                 .log().ifValidationFails()
                 .statusCode(HttpStatus.OK.value())
                 .body("$", hasSize(1))
-                .body("value", hasItem(60));
+                .body("value", not(hasItem(oldValue.intValue())))
+                .body("value", hasItem(newValue.intValue()));
     }
 
     @Test
     void shouldUpdateTimerOption_WhenUserIsAuthenticated_AndOptionExists() {
-        TimerOption originalOption = new TimerOption();
-        originalOption.setUuid(UUID.randomUUID());
-        originalOption.setValue(25L);
-        originalOption.setUser(testUser);
+        // 1. Arrange
+        Long originalValue = 25L;
+        Long updatedValue = 30L;
+        LocalDateTime now = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
+        LocalDateTime future = LocalDateTime.now().plusHours(1).truncatedTo(ChronoUnit.SECONDS);
+
+        TimerOption originalOption = TimerOption.builder()
+                .uuid(UUID.randomUUID())
+                .value(originalValue)
+                .user(testUser)
+                .createdAt(now)
+                .updatedAt(now)
+                .isDeleted(false)
+                .build();
+
         TimerOption savedOption = timerOptionRepository.save(originalOption);
 
-        Map<String, Object> updateRequest = Map.of(
-                "value", 30
-        );
+        TimerOptionUpdateRequestDto request = TimerOptionUpdateRequestDto.builder()
+                .value(updatedValue)
+                .updatedAt(future)
+                .build();
 
-        given()
+        // 2. Act
+        Response response = given()
                 .contentType(ContentType.JSON)
                 .header("Authorization", "Bearer " + authToken)
-                .body(updateRequest)
+                .body(request)
                 .when()
-                .put("/api/v1/timer-options/{id}", savedOption.getUuid())
-                .then()
+                .put("/api/v1/timer-options/{id}", savedOption.getUuid());
+
+        // 3. Assert
+        response.then()
                 .log().ifValidationFails()
                 .statusCode(HttpStatus.OK.value())
-                .body("uuid", equalTo(savedOption.getUuid().toString()))
-                .body("value", equalTo(30));
+                .body("uuid", notNullValue())
+                .body("value", equalTo(updatedValue.intValue()))
+                .body("createdAt", equalTo(now.toString()))
+                .body("updatedAt", equalTo(future.toString()))
+                .body("deleted", equalTo(false));
     }
 
     @Test
     void shouldReturnForbidden_WhenUpdatingTimerOptionBelongingToAnotherUser() {
-        User victimUser = new User();
-        victimUser.setEmail("victim@example.com");
-        victimUser.setPassword(passwordEncoder.encode("password"));
+        // 1. Arrange
+        Long victimValue = 120L;
+        Long adversaryValue = 5L;
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime future = LocalDateTime.now().plusHours(1);
+
+        User victimUser = User.builder()
+                .email("victim@example.com")
+                .password(passwordEncoder.encode("password"))
+                .build();
         userRepository.save(victimUser);
 
-        TimerOption victimOption = new TimerOption();
-        victimOption.setUuid(UUID.randomUUID());
-        victimOption.setValue(120L);
-        victimOption.setUser(victimUser);
+        TimerOption victimOption = TimerOption.builder()
+                .uuid(UUID.randomUUID())
+                .value(victimValue)
+                .user(victimUser)
+                .createdAt(now)
+                .updatedAt(now)
+                .isDeleted(false)
+                .build();
         TimerOption savedVictimOption = timerOptionRepository.save(victimOption);
 
-        Map<String, Object> updateRequest = Map.of(
-                "value", 5
-        );
+        TimerOptionUpdateRequestDto request = TimerOptionUpdateRequestDto.builder()
+                .value(adversaryValue)
+                .updatedAt(future)
+                .build();
 
-        given()
+        // 2. Act
+        Response response = given()
                 .contentType(ContentType.JSON)
                 .header("Authorization", "Bearer " + authToken)
-                .body(updateRequest)
+                .body(request)
                 .when()
-                .put("/api/v1/timer-options/{id}", savedVictimOption.getUuid())
-                .then()
+                .put("/api/v1/timer-options/{id}", savedVictimOption.getUuid());
+
+        // 3. Assert
+        response.then()
                 .log().ifValidationFails()
                 .statusCode(HttpStatus.FORBIDDEN.value());
     }
 
     @Test
     void shouldSoftDeleteTimerOption_WhenUserIsAuthenticated_AndOwnsOption() {
-        TimerOption option = new TimerOption();
-        option.setUuid(UUID.randomUUID());
-        option.setValue(90L);
-        option.setUser(testUser);
-        option.setDeleted(false);
+        // 1. Arrange
+        LocalDateTime now = LocalDateTime.now();
+
+        TimerOption option = TimerOption.builder()
+                .uuid(UUID.randomUUID())
+                .value(90L)
+                .user(testUser)
+                .createdAt(now)
+                .updatedAt(now)
+                .isDeleted(false)
+                .build();
         TimerOption savedOption = timerOptionRepository.save(option);
 
-        given()
+        // 2. Act
+        Response response = given()
                 .contentType(ContentType.JSON)
                 .header("Authorization", "Bearer " + authToken)
                 .when()
-                .delete("/api/v1/timer-options/{id}", savedOption.getUuid())
-                .then()
+                .delete("/api/v1/timer-options/{id}", savedOption.getUuid());
+
+        // 3. Assert
+        response.then()
                 .log().ifValidationFails()
                 .statusCode(HttpStatus.NO_CONTENT.value());
 
@@ -240,14 +322,18 @@ public class TimerOptionControllerIT extends BaseIntegrationTest {
 
     @Test
     void shouldReturnNotFound_WhenDeletingNonExistentTimerOption() {
+        // 1. Arrange
         UUID nonExistentId = UUID.randomUUID();
 
-        given()
+        // 2. Act
+        Response response = given()
                 .contentType(ContentType.JSON)
                 .header("Authorization", "Bearer " + authToken)
                 .when()
-                .delete("/api/v1/timer-options/{id}", nonExistentId)
-                .then()
+                .delete("/api/v1/timer-options/{id}", nonExistentId);
+
+        // 3. Assert
+        response.then()
                 .log().ifValidationFails()
                 .statusCode(HttpStatus.NOT_FOUND.value());
     }

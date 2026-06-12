@@ -8,6 +8,8 @@ import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.literandltx.timer.dto.entry.TimerEntryCreateRequestDto;
+import com.literandltx.timer.dto.entry.TimerEntryUpdateRequestDto;
 import com.literandltx.timer.dto.user.UserLoginRequestDto;
 import com.literandltx.timer.model.Label;
 import com.literandltx.timer.model.TimerEntry;
@@ -16,11 +18,11 @@ import com.literandltx.timer.repository.LabelRepository;
 import com.literandltx.timer.repository.TimerEntryRepository;
 import com.literandltx.timer.repository.UserRepository;
 import io.restassured.http.ContentType;
+import io.restassured.response.Response;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.HashMap;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -57,16 +59,21 @@ public class TimerEntryControllerIT extends BaseIntegrationTest {
     void setUpUser() {
         super.setUp();
 
-        testUser = new User();
-        testUser.setEmail(userEmail);
-        testUser.setPassword(passwordEncoder.encode(userPlainPassword));
+        testUser = User.builder()
+                .email(userEmail)
+                .password(passwordEncoder.encode(userPlainPassword))
+                .build();
         userRepository.save(testUser);
 
-        defaultLabel = new Label();
-        defaultLabel.setUuid(UUID.randomUUID());
-        defaultLabel.setName("Default Label");
-        defaultLabel.setColor("#000000");
-        defaultLabel.setUser(testUser);
+        defaultLabel = Label.builder()
+                .uuid(UUID.randomUUID())
+                .name("Default Label")
+                .color("#000000")
+                .user(testUser)
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
+                .isDeleted(false)
+                .build();
         labelRepository.save(defaultLabel);
 
         UserLoginRequestDto loginRequest = new UserLoginRequestDto();
@@ -95,250 +102,366 @@ public class TimerEntryControllerIT extends BaseIntegrationTest {
 
     @Test
     void shouldCreateTimerEntry_WhenUserIsAuthenticated() {
+        // 1. Arrange
+        LocalDateTime now = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
         UUID newEntryId = UUID.randomUUID();
         Long startTimeMs = System.currentTimeMillis();
+        Long durationSeconds = 3600L;
 
-        Map<String, Object> request = Map.of(
-                "uuid", newEntryId,
-                "labelId", defaultLabel.getUuid(),
-                "startTime", startTimeMs,
-                "durationSeconds", 3600
-        );
+        TimerEntryCreateRequestDto request = TimerEntryCreateRequestDto.builder()
+                .uuid(newEntryId)
+                .labelId(defaultLabel.getUuid())
+                .startTime(startTimeMs)
+                .durationSeconds(durationSeconds)
+                .createdAt(now)
+                .updatedAt(now)
+                .build();
 
-        given()
+        // 2. Act
+        Response response = given()
                 .contentType(ContentType.JSON)
                 .header("Authorization", "Bearer " + authToken)
                 .body(request)
                 .when()
-                .post("/api/v1/timer-entries")
-                .then()
+                .post("/api/v1/timer-entries");
+
+        // 3. Assert
+        response.then()
                 .log().ifValidationFails()
                 .statusCode(HttpStatus.CREATED.value())
                 .body("uuid", notNullValue())
-                .body("durationSeconds", equalTo(3600));
+                .body("labelId", equalTo(defaultLabel.getUuid().toString()))
+                .body("startTime", equalTo(startTimeMs))
+                .body("durationSeconds", equalTo(durationSeconds.intValue()))
+                .body("createdAt", equalTo(now.toString()))
+                .body("updatedAt", equalTo(now.toString()))
+                .body("deleted", equalTo(false));
     }
 
     @Test
     void shouldReturnAllActiveTimerEntries_WhenNoUpdatedAfterIsProvided() {
-        TimerEntry entry1 = new TimerEntry();
-        entry1.setUuid(UUID.randomUUID());
-        entry1.setDurationSeconds(1500L);
-        entry1.setStartTime(System.currentTimeMillis());
-        entry1.setLabel(defaultLabel);
-        entry1.setUser(testUser);
-        entry1.setDeleted(false);
+        // 1. Arrange
+        Long duration1 = 1500L;
+        Long duration2 = 3000L;
+        LocalDateTime now = LocalDateTime.now();
 
-        TimerEntry entry2 = new TimerEntry();
-        entry2.setUuid(UUID.randomUUID());
-        entry2.setDurationSeconds(3000L);
-        entry2.setStartTime(System.currentTimeMillis() + 1);
-        entry2.setLabel(defaultLabel);
-        entry2.setUser(testUser);
-        entry2.setDeleted(true);
+        TimerEntry entry1 = TimerEntry.builder()
+                .uuid(UUID.randomUUID())
+                .durationSeconds(duration1)
+                .startTime(System.currentTimeMillis())
+                .label(defaultLabel)
+                .user(testUser)
+                .createdAt(now)
+                .updatedAt(now)
+                .isDeleted(false)
+                .build();
+
+        TimerEntry entry2 = TimerEntry.builder()
+                .uuid(UUID.randomUUID())
+                .durationSeconds(duration2)
+                .startTime(System.currentTimeMillis() + 1)
+                .label(defaultLabel)
+                .user(testUser)
+                .createdAt(now.plusHours(1))
+                .updatedAt(now.plusHours(1))
+                .isDeleted(true)
+                .build();
 
         timerEntryRepository.saveAll(List.of(entry1, entry2));
 
-        given()
+        // 2. Act
+        Response response = given()
                 .contentType(ContentType.JSON)
                 .header("Authorization", "Bearer " + authToken)
                 .when()
-                .get("/api/v1/timer-entries")
-                .then()
+                .get("/api/v1/timer-entries");
+
+        // 3. Assert
+        response.then()
                 .log().ifValidationFails()
                 .statusCode(HttpStatus.OK.value())
                 .body("$", hasSize(1))
-                .body("durationSeconds", hasItem(1500))
-                .body("durationSeconds", not(hasItem(3000)));
+                .body("durationSeconds", hasItem(duration1.intValue()))
+                .body("durationSeconds", not(hasItem(duration2.intValue())));
     }
 
     @Test
     void shouldReturnDeltaUpdates_WhenUpdatedAfterIsProvided() {
+        // 1. Arrange
+        Long oldDuration = 60L;
+        Long newDuration = 120L;
         LocalDateTime past = LocalDateTime.now().minusDays(5);
         LocalDateTime future = LocalDateTime.now().plusDays(5);
 
-        TimerEntry oldEntry = new TimerEntry();
-        oldEntry.setUuid(UUID.randomUUID());
-        oldEntry.setDurationSeconds(60L);
-        oldEntry.setStartTime(System.currentTimeMillis());
-        oldEntry.setLabel(defaultLabel);
-        oldEntry.setUpdatedAt(past);
-        oldEntry.setUser(testUser);
+        TimerEntry oldEntry = TimerEntry.builder()
+                .uuid(UUID.randomUUID())
+                .durationSeconds(oldDuration)
+                .startTime(System.currentTimeMillis())
+                .label(defaultLabel)
+                .user(testUser)
+                .createdAt(past)
+                .updatedAt(past)
+                .isDeleted(false)
+                .build();
 
-        TimerEntry newEntry = new TimerEntry();
-        newEntry.setUuid(UUID.randomUUID());
-        newEntry.setDurationSeconds(120L);
-        newEntry.setStartTime(System.currentTimeMillis() + 1);
-        newEntry.setLabel(defaultLabel);
-        newEntry.setUpdatedAt(future);
-        newEntry.setUser(testUser);
+        TimerEntry newEntry = TimerEntry.builder()
+                .uuid(UUID.randomUUID())
+                .durationSeconds(newDuration)
+                .startTime(System.currentTimeMillis() + 1)
+                .label(defaultLabel)
+                .user(testUser)
+                .createdAt(past)
+                .updatedAt(future)
+                .isDeleted(false)
+                .build();
 
         timerEntryRepository.saveAll(List.of(oldEntry, newEntry));
 
+        // 2. Act
         String isoDate = LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME);
-
-        given()
+        Response response = given()
                 .contentType(ContentType.JSON)
                 .header("Authorization", "Bearer " + authToken)
                 .queryParam("updatedAfter", isoDate)
                 .when()
-                .get("/api/v1/timer-entries")
-                .then()
+                .get("/api/v1/timer-entries");
+
+        // 3. Assert
+        response.then()
                 .log().ifValidationFails()
                 .statusCode(HttpStatus.OK.value())
                 .body("$", hasSize(1))
-                .body("durationSeconds", hasItem(120));
+                .body("durationSeconds", not(hasItem(oldDuration.intValue())))
+                .body("durationSeconds", hasItem(newDuration.intValue()));
     }
 
     @Test
     void shouldUpdateTimerEntry_WhenUserIsAuthenticated_AndEntryExists() {
-        TimerEntry originalEntry = new TimerEntry();
-        originalEntry.setUuid(UUID.randomUUID());
-        originalEntry.setDurationSeconds(100L);
-        originalEntry.setStartTime(System.currentTimeMillis());
-        originalEntry.setLabel(defaultLabel);
-        originalEntry.setUser(testUser);
+        // 1. Arrange
+        Long originalDuration = 100L;
+        Long updatedDuration = 200L;
+        LocalDateTime now = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
+        LocalDateTime future = LocalDateTime.now().plusHours(1).truncatedTo(ChronoUnit.SECONDS);
+
+        TimerEntry originalEntry = TimerEntry.builder()
+                .uuid(UUID.randomUUID())
+                .durationSeconds(originalDuration)
+                .startTime(System.currentTimeMillis())
+                .label(defaultLabel)
+                .user(testUser)
+                .createdAt(now)
+                .updatedAt(now)
+                .isDeleted(false)
+                .build();
+
         TimerEntry savedEntry = timerEntryRepository.save(originalEntry);
 
-        Map<String, Object> updateRequest = Map.of(
-                "durationSeconds", 200
-        );
+        TimerEntryUpdateRequestDto request = TimerEntryUpdateRequestDto.builder()
+                .durationSeconds(updatedDuration)
+                .updatedAt(future)
+                .build();
 
-        given()
+        // 2. Act
+        Response response = given()
                 .contentType(ContentType.JSON)
                 .header("Authorization", "Bearer " + authToken)
-                .body(updateRequest)
+                .body(request)
                 .when()
-                .put("/api/v1/timer-entries/{id}", savedEntry.getUuid())
-                .then()
+                .put("/api/v1/timer-entries/{id}", savedEntry.getUuid());
+
+        // 3. Assert
+        response.then()
                 .log().ifValidationFails()
                 .statusCode(HttpStatus.OK.value())
                 .body("uuid", equalTo(savedEntry.getUuid().toString()))
-                .body("durationSeconds", equalTo(200));
+                .body("durationSeconds", equalTo(updatedDuration.intValue()))
+                .body("createdAt", equalTo(now.toString()))
+                .body("updatedAt", equalTo(future.toString()))
+                .body("deleted", equalTo(false));
     }
 
     @Test
     void shouldAssignLabelToTimerEntry_WhenUserOwnsBoth() {
-        Label newLabel = new Label();
-        newLabel.setUuid(UUID.randomUUID());
-        newLabel.setName("Focus Work");
-        newLabel.setColor("#FFF");
-        newLabel.setUser(testUser);
+        // 1. Arrange
+        LocalDateTime now = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
+        LocalDateTime future = LocalDateTime.now().plusHours(1).truncatedTo(ChronoUnit.SECONDS);
+
+        Label newLabel = Label.builder()
+                .uuid(UUID.randomUUID())
+                .name("Focus Work")
+                .color("#FFFFFF")
+                .user(testUser)
+                .createdAt(now)
+                .updatedAt(now)
+                .isDeleted(false)
+                .build();
         Label savedLabel = labelRepository.save(newLabel);
 
-        TimerEntry entry = new TimerEntry();
-        entry.setUuid(UUID.randomUUID());
-        entry.setDurationSeconds(500L);
-        entry.setStartTime(System.currentTimeMillis());
-        entry.setLabel(defaultLabel);
-        entry.setUser(testUser);
+        TimerEntry entry = TimerEntry.builder()
+                .uuid(UUID.randomUUID())
+                .durationSeconds(500L)
+                .startTime(System.currentTimeMillis())
+                .label(defaultLabel)
+                .user(testUser)
+                .createdAt(now)
+                .updatedAt(now)
+                .isDeleted(false)
+                .build();
         TimerEntry savedEntry = timerEntryRepository.save(entry);
 
-        Map<String, Object> updateRequest = new HashMap<>();
-        updateRequest.put("labelId", savedLabel.getUuid());
+        TimerEntryUpdateRequestDto request = TimerEntryUpdateRequestDto.builder()
+                .labelId(savedLabel.getUuid())
+                .updatedAt(future)
+                .build();
 
-        given()
+        // 2. Act
+        Response response = given()
                 .contentType(ContentType.JSON)
                 .header("Authorization", "Bearer " + authToken)
-                .body(updateRequest)
+                .body(request)
                 .when()
-                .put("/api/v1/timer-entries/{id}", savedEntry.getUuid())
-                .then()
+                .put("/api/v1/timer-entries/{id}", savedEntry.getUuid());
+
+        // 3. Assert
+        response.then()
                 .log().ifValidationFails()
                 .statusCode(HttpStatus.OK.value())
-                .body("labelId", equalTo(savedLabel.getUuid().toString()));
+                .body("labelId", equalTo(savedLabel.getUuid().toString()))
+                .body("updatedAt", equalTo(future.toString()));
     }
 
     @Test
     void shouldReturnForbidden_WhenUpdatingTimerEntryWithAnotherUsersLabel() {
-        User victimUser = new User();
-        victimUser.setEmail("victim@example.com");
-        victimUser.setPassword(passwordEncoder.encode("password"));
+        // 1. Arrange
+        LocalDateTime now = LocalDateTime.now();
+
+        User victimUser = User.builder()
+                .email("victim@example.com")
+                .password(passwordEncoder.encode("password"))
+                .build();
         userRepository.save(victimUser);
 
-        Label victimLabel = new Label();
-        victimLabel.setUuid(UUID.randomUUID());
-        victimLabel.setName("Victim's Label");
-        victimLabel.setColor("#000");
-        victimLabel.setUser(victimUser);
+        Label victimLabel = Label.builder()
+                .uuid(UUID.randomUUID())
+                .name("Victim's Label")
+                .color("#000000")
+                .user(victimUser)
+                .createdAt(now)
+                .updatedAt(now)
+                .isDeleted(false)
+                .build();
         Label savedVictimLabel = labelRepository.save(victimLabel);
 
-        TimerEntry entry = new TimerEntry();
-        entry.setUuid(UUID.randomUUID());
-        entry.setDurationSeconds(500L);
-        entry.setStartTime(System.currentTimeMillis());
-        entry.setLabel(defaultLabel);
-        entry.setUser(testUser);
+        TimerEntry entry = TimerEntry.builder()
+                .uuid(UUID.randomUUID())
+                .durationSeconds(500L)
+                .startTime(System.currentTimeMillis())
+                .label(defaultLabel)
+                .user(testUser)
+                .createdAt(now)
+                .updatedAt(now)
+                .isDeleted(false)
+                .build();
         TimerEntry savedEntry = timerEntryRepository.save(entry);
 
-        Map<String, Object> updateRequest = Map.of(
-                "labelId", savedVictimLabel.getUuid()
-        );
+        TimerEntryUpdateRequestDto request = TimerEntryUpdateRequestDto.builder()
+                .labelId(savedVictimLabel.getUuid())
+                .updatedAt(LocalDateTime.now().plusHours(1))
+                .build();
 
-        given()
+        // 2. Act
+        Response response = given()
                 .contentType(ContentType.JSON)
                 .header("Authorization", "Bearer " + authToken)
-                .body(updateRequest)
+                .body(request)
                 .when()
-                .put("/api/v1/timer-entries/{id}", savedEntry.getUuid())
-                .then()
+                .put("/api/v1/timer-entries/{id}", savedEntry.getUuid());
+
+        // 3. Assert
+        response.then()
                 .log().ifValidationFails()
                 .statusCode(HttpStatus.FORBIDDEN.value());
     }
 
     @Test
     void shouldReturnForbidden_WhenUpdatingTimerEntryBelongingToAnotherUser() {
-        User victimUser = new User();
-        victimUser.setEmail("victim2@example.com");
-        victimUser.setPassword(passwordEncoder.encode("password"));
+        // 1. Arrange
+        LocalDateTime now = LocalDateTime.now();
+
+        User victimUser = User.builder()
+                .email("victim2@example.com")
+                .password(passwordEncoder.encode("password"))
+                .build();
         userRepository.save(victimUser);
 
-        Label victimLabel = new Label();
-        victimLabel.setUuid(UUID.randomUUID());
-        victimLabel.setName("Victim Label 2");
-        victimLabel.setColor("#000");
-        victimLabel.setUser(victimUser);
+        Label victimLabel = Label.builder()
+                .uuid(UUID.randomUUID())
+                .name("Victim Label 2")
+                .color("#000000")
+                .user(victimUser)
+                .createdAt(now)
+                .updatedAt(now)
+                .isDeleted(false)
+                .build();
         labelRepository.save(victimLabel);
 
-        TimerEntry victimEntry = new TimerEntry();
-        victimEntry.setUuid(UUID.randomUUID());
-        victimEntry.setDurationSeconds(999L);
-        victimEntry.setStartTime(System.currentTimeMillis());
-        victimEntry.setLabel(victimLabel);
-        victimEntry.setUser(victimUser);
+        TimerEntry victimEntry = TimerEntry.builder()
+                .uuid(UUID.randomUUID())
+                .durationSeconds(999L)
+                .startTime(System.currentTimeMillis())
+                .label(victimLabel)
+                .user(victimUser)
+                .createdAt(now)
+                .updatedAt(now)
+                .isDeleted(false)
+                .build();
         TimerEntry savedVictimEntry = timerEntryRepository.save(victimEntry);
 
-        Map<String, Object> updateRequest = Map.of(
-                "durationSeconds", 10
-        );
+        TimerEntryUpdateRequestDto request = TimerEntryUpdateRequestDto.builder()
+                .durationSeconds(10L)
+                .updatedAt(LocalDateTime.now().plusHours(1))
+                .build();
 
-        given()
+        // 2. Act
+        Response response = given()
                 .contentType(ContentType.JSON)
                 .header("Authorization", "Bearer " + authToken)
-                .body(updateRequest)
+                .body(request)
                 .when()
-                .put("/api/v1/timer-entries/{id}", savedVictimEntry.getUuid())
-                .then()
+                .put("/api/v1/timer-entries/{id}", savedVictimEntry.getUuid());
+
+        // 3. Assert
+        response.then()
                 .log().ifValidationFails()
                 .statusCode(HttpStatus.FORBIDDEN.value());
     }
 
     @Test
     void shouldSoftDeleteTimerEntry_WhenUserIsAuthenticated_AndOwnsEntry() {
-        TimerEntry entry = new TimerEntry();
-        entry.setUuid(UUID.randomUUID());
-        entry.setDurationSeconds(55L);
-        entry.setStartTime(System.currentTimeMillis());
-        entry.setLabel(defaultLabel);
-        entry.setUser(testUser);
-        entry.setDeleted(false);
+        // 1. Arrange
+        LocalDateTime now = LocalDateTime.now();
+
+        TimerEntry entry = TimerEntry.builder()
+                .uuid(UUID.randomUUID())
+                .durationSeconds(55L)
+                .startTime(System.currentTimeMillis())
+                .label(defaultLabel)
+                .user(testUser)
+                .createdAt(now)
+                .updatedAt(now)
+                .isDeleted(false)
+                .build();
         TimerEntry savedEntry = timerEntryRepository.save(entry);
 
-        given()
+        // 2. Act
+        Response response = given()
                 .contentType(ContentType.JSON)
                 .header("Authorization", "Bearer " + authToken)
                 .when()
-                .delete("/api/v1/timer-entries/{id}", savedEntry.getUuid())
-                .then()
+                .delete("/api/v1/timer-entries/{id}", savedEntry.getUuid());
+
+        // 3. Assert
+        response.then()
                 .log().ifValidationFails()
                 .statusCode(HttpStatus.NO_CONTENT.value());
 
@@ -348,14 +471,18 @@ public class TimerEntryControllerIT extends BaseIntegrationTest {
 
     @Test
     void shouldReturnNotFound_WhenDeletingNonExistentTimerEntry() {
+        // 1. Arrange
         UUID nonExistentId = UUID.randomUUID();
 
-        given()
+        // 2. Act
+        Response response = given()
                 .contentType(ContentType.JSON)
                 .header("Authorization", "Bearer " + authToken)
                 .when()
-                .delete("/api/v1/timer-entries/{id}", nonExistentId)
-                .then()
+                .delete("/api/v1/timer-entries/{id}", nonExistentId);
+
+        // 3. Assert
+        response.then()
                 .log().ifValidationFails()
                 .statusCode(HttpStatus.NOT_FOUND.value());
     }
