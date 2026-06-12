@@ -12,8 +12,10 @@ import com.literandltx.timer.repository.TimerOptionRepository;
 import com.literandltx.timer.repository.TimerSettingRepository;
 import com.literandltx.timer.service.TimerSettingService;
 import jakarta.persistence.EntityNotFoundException;
+
 import java.time.LocalDateTime;
 import java.util.Optional;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -34,7 +36,7 @@ public class TimerSettingServiceImpl implements TimerSettingService {
         log.info("Upserting timer settings for user: {}", authUser.getId());
 
         TimerOption option = timerOptionRepository.findById(request.timerOptionId())
-                .orElseThrow(() -> new IllegalArgumentException("Timer option not found"));
+                .orElseThrow(() -> new EntityNotFoundException("Timer option with id " + request.timerOptionId() + " not found"));
 
         validateOwnership(option, authUser);
 
@@ -51,7 +53,7 @@ public class TimerSettingServiceImpl implements TimerSettingService {
         }
 
         timerSetting.setPreference(option);
-        timerSetting.setLastUpdated(System.currentTimeMillis());
+        timerSetting.setUpdatedAt(LocalDateTime.now());
 
         TimerSetting savedSetting = timerSettingRepository.save(timerSetting);
         return timerSettingMapper.toResponseDto(savedSetting);
@@ -63,12 +65,18 @@ public class TimerSettingServiceImpl implements TimerSettingService {
 
         if (updatedAfter != null) {
             log.debug("Fetching setting updated after: {}", updatedAfter);
-            setting = timerSettingRepository.findByUserIdAndUpdatedAtAfter(authUser.getId(), updatedAfter)
-                    .orElseThrow(() -> new EntityNotFoundException("No recent settings found"));
+            Optional<TimerSetting> deltaSetting = timerSettingRepository.findByUserIdAndUpdatedAtAfter(authUser.getId(), updatedAfter);
+
+            if (deltaSetting.isEmpty()) {
+                log.debug("No settings updates found after {} for user {}", updatedAfter, authUser.getId());
+                return null;
+            }
+
+            setting = deltaSetting.get();
         } else {
             log.debug("Fetching current setting");
             setting = timerSettingRepository.findByUserId(authUser.getId())
-                    .orElseThrow(() -> new EntityNotFoundException("Setting not found"));
+                    .orElseThrow(() -> new EntityNotFoundException("Setting not found for user " + authUser.getId()));
         }
 
         return timerSettingMapper.toResponseDto(setting);

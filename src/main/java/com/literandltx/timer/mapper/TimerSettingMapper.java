@@ -23,8 +23,5 @@ public interface TimerSettingMapper {
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     @Mapping(target = "preference", ignore = true)
-    @Mapping(target = "user", ignore = true)
-    @Mapping(target = "createdAt", ignore = true)
-    @Mapping(target = "updatedAt", ignore = true)
     void updateEntityFromDto(TimerSettingRequestDto request, @MappingTarget TimerSetting timerSetting);
 }
