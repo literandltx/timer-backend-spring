@@ -13,6 +13,7 @@ import org.mapstruct.Mappings;
 
 @Mapper(config = MapperConfig.class)
 public interface UserMapper {
+
     @Mappings({
             @Mapping(target = "id", ignore = true),
             @Mapping(target = "password", source = "encodedPassword"),
@@ -23,4 +24,5 @@ public interface UserMapper {
     UserRegistrationResponseDto toModel(User user);
 
     UserResponseDto toResponseDto(User user);
+
 }

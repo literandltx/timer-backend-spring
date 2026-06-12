@@ -1,10 +1,10 @@
 package com.literandltx.timer.controller;
 
-import com.literandltx.timer.dto.label.LabelCreateRequestDto;
-import com.literandltx.timer.dto.label.LabelResponseDto;
-import com.literandltx.timer.dto.label.LabelUpdateRequestDto;
+import com.literandltx.timer.dto.option.TimerOptionCreateRequestDto;
+import com.literandltx.timer.dto.option.TimerOptionResponseDto;
+import com.literandltx.timer.dto.option.TimerOptionUpdateRequestDto;
 import com.literandltx.timer.model.User;
-import com.literandltx.timer.service.LabelService;
+import com.literandltx.timer.service.TimerOptionService;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -25,38 +25,38 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/v1/labels")
-public class LabelController {
+@RequestMapping("/api/v1/timer-options")
+public class TimerOptionController {
 
-    private final LabelService labelService;
+    private final TimerOptionService timerOptionService;
 
     @PostMapping
-    public ResponseEntity<LabelResponseDto> save(
-            @RequestBody LabelCreateRequestDto request,
+    public ResponseEntity<TimerOptionResponseDto> save(
+            @RequestBody TimerOptionCreateRequestDto request,
             @AuthenticationPrincipal User user
     ) {
-        LabelResponseDto response = labelService.save(request, user);
+        TimerOptionResponseDto response = timerOptionService.save(request, user);
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(response);
     }
 
     @GetMapping
-    public ResponseEntity<List<LabelResponseDto>> findAll(
+    public ResponseEntity<List<TimerOptionResponseDto>> findAll(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime updatedAfter,
             @AuthenticationPrincipal User user
     ) {
-        List<LabelResponseDto> labels = labelService.findAll(updatedAfter, user);
+        List<TimerOptionResponseDto> labels = timerOptionService.findAll(updatedAfter, user);
         return ResponseEntity.ok(labels);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<LabelResponseDto> updateLabel(
+    public ResponseEntity<TimerOptionResponseDto> updateLabel(
             @PathVariable UUID id,
-            @RequestBody LabelUpdateRequestDto request,
+            @RequestBody TimerOptionUpdateRequestDto request,
             @AuthenticationPrincipal User user
     ) {
-        LabelResponseDto updatedLabel = labelService.update(id, request, user);
+        TimerOptionResponseDto updatedLabel = timerOptionService.update(id, request, user);
         return ResponseEntity.ok(updatedLabel);
     }
 
@@ -65,7 +65,8 @@ public class LabelController {
             @PathVariable UUID id,
             @AuthenticationPrincipal User user
     ) {
-        labelService.delete(id, user);
+        timerOptionService.delete(id, user);
         return ResponseEntity.noContent().build();
     }
+
 }
