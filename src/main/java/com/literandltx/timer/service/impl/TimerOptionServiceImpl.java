@@ -45,7 +45,7 @@ public class TimerOptionServiceImpl implements TimerOptionService {
             return timerOptionMapper.toResponseDto(option);
         }
 
-        TimerOption timerOption = timerOptionMapper.toTimerEntry(request, authUser);
+        TimerOption timerOption = timerOptionMapper.toTimerOption(request, authUser);
         TimerOption savedTimerOption = timerOptionRepository.save(timerOption);
 
         return timerOptionMapper.toResponseDto(savedTimerOption);
@@ -79,7 +79,7 @@ public class TimerOptionServiceImpl implements TimerOptionService {
 
         validateOwnership(existingOption, authUser);
 
-        existingOption.setValue(request.value());
+        timerOptionMapper.updateOptionFromDto(request, existingOption);
 
         if (request.updatedAt() != null) {
             existingOption.setUpdatedAt(request.updatedAt());
@@ -99,7 +99,7 @@ public class TimerOptionServiceImpl implements TimerOptionService {
         log.info("Soft deleting timer option with id: {} for user id: {}", id, authUser.getId());
 
         TimerOption option = timerOptionRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Timer entry with id " + id + " not found"));
+                .orElseThrow(() -> new EntityNotFoundException("Timer option with id " + id + " not found"));
 
         validateOwnership(option, authUser);
 
