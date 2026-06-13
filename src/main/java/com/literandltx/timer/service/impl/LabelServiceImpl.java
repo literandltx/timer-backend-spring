@@ -5,11 +5,13 @@ import static com.literandltx.timer.validation.OwnershipValidator.validateOwners
 import com.literandltx.timer.dto.label.LabelCreateRequestDto;
 import com.literandltx.timer.dto.label.LabelResponseDto;
 import com.literandltx.timer.dto.label.LabelUpdateRequestDto;
+import com.literandltx.timer.dto.sync.SyncAction;
 import com.literandltx.timer.mapper.LabelMapper;
 import com.literandltx.timer.model.Label;
 import com.literandltx.timer.model.User;
 import com.literandltx.timer.repository.LabelRepository;
 import com.literandltx.timer.service.LabelService;
+import com.literandltx.timer.service.WebSocketBroadcastService;
 import jakarta.persistence.EntityNotFoundException;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -26,6 +28,9 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class LabelServiceImpl implements LabelService {
 
+    private static final String WS_DESTINATION = "/queue/labels";
+
+    private final WebSocketBroadcastService broadcastService;
     private final LabelRepository labelRepository;
     private final LabelMapper labelMapper;
 
@@ -47,8 +52,10 @@ public class LabelServiceImpl implements LabelService {
 
         Label newLabel = labelMapper.toLabel(request, authUser);
         Label savedLabel = labelRepository.save(newLabel);
+        LabelResponseDto response = labelMapper.toResponseDto(savedLabel);
 
-        return labelMapper.toResponseDto(savedLabel);
+        broadcastService.broadcast(authUser.getEmail(), WS_DESTINATION, SyncAction.CREATE, response);
+        return response;
     }
 
     @Override
@@ -90,7 +97,10 @@ public class LabelServiceImpl implements LabelService {
         Label updatedLabel = labelRepository.save(existingLabel);
         log.debug("Successfully updated label with ID: {}", updatedLabel.getUuid());
 
-        return labelMapper.toResponseDto(updatedLabel);
+        LabelResponseDto response = labelMapper.toResponseDto(updatedLabel);
+
+        broadcastService.broadcast(authUser.getEmail(), WS_DESTINATION, SyncAction.UPDATE, response);
+        return response;
     }
 
     @Override
@@ -105,8 +115,10 @@ public class LabelServiceImpl implements LabelService {
 
         label.setDeleted(true);
         label.setUpdatedAt(LocalDateTime.now());
-        labelRepository.save(label);
+        Label savedLabel = labelRepository.save(label);
         log.info("Label with id: {} deleted successfully", id);
+
+        broadcastService.broadcast(authUser.getEmail(), WS_DESTINATION, SyncAction.DELETE, labelMapper.toResponseDto(savedLabel));
     }
 
 }
