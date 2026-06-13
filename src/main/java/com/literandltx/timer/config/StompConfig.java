@@ -49,6 +49,13 @@ public class StompConfig implements WebSocketMessageBrokerConfigurer {
                         MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
 
                 if (accessor != null && StompCommand.CONNECT.equals(accessor.getCommand())) {
+
+                    // User already authenticated
+                    if (accessor.getUser() != null) {
+                        return message;
+                    }
+
+                    // JWT validation
                     String authHeader = accessor.getFirstNativeHeader("Authorization");
 
                     if (authHeader != null && authHeader.startsWith("Bearer ")) {
@@ -64,7 +71,7 @@ public class StompConfig implements WebSocketMessageBrokerConfigurer {
                             throw new IllegalArgumentException("Invalid JWT Token");
                         }
                     } else {
-                        throw new IllegalArgumentException("Missing JWT Token");
+                        throw new IllegalArgumentException("Missing Authentication: No Session or JWT Token provided");
                     }
                 }
 
