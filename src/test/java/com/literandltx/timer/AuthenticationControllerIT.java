@@ -16,6 +16,7 @@ import com.literandltx.timer.model.User;
 import com.literandltx.timer.repository.RoleRepository;
 import com.literandltx.timer.repository.UserRepository;
 import io.restassured.http.ContentType;
+import java.util.Set;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -23,8 +24,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
-
-import java.util.Set;
 
 public class AuthenticationControllerIT extends BaseIntegrationTest {
 

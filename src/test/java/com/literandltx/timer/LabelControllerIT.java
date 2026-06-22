@@ -20,14 +20,12 @@ import com.literandltx.timer.repository.RoleRepository;
 import com.literandltx.timer.repository.UserRepository;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
-
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
-
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
