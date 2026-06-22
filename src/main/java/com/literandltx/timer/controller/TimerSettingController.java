@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/settings")
+@RequestMapping("/api/v1/timer-settings")
 @RequiredArgsConstructor
 public class TimerSettingController {
 

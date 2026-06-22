@@ -38,8 +38,8 @@ public class TimerSettingServiceImpl implements TimerSettingService {
     public TimerSettingResponseDto upsert(TimerSettingRequestDto request, User authUser) {
         log.info("Upserting timer settings for user: {}", authUser.getId());
 
-        TimerOption option = timerOptionRepository.findById(request.timerOptionId())
-                .orElseThrow(() -> new EntityNotFoundException("Timer option with id " + request.timerOptionId() + " not found"));
+        TimerOption option = timerOptionRepository.findById(request.timerOptionUuid())
+                .orElseThrow(() -> new EntityNotFoundException("Timer option with id " + request.timerOptionUuid() + " not found"));
 
         validateOwnership(option, authUser);
 

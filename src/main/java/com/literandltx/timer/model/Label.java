@@ -23,11 +23,7 @@ import lombok.experimental.SuperBuilder;
 @AllArgsConstructor
 @SuperBuilder
 @Entity
-@Table(name = "labels", uniqueConstraints = {
-        @UniqueConstraint(
-                columnNames = {"user_id", "name"}
-        )
-})
+@Table(name = "labels")
 public class Label extends SyncEntity implements UserOwned {
 
     @Column(name = "name", nullable = false)

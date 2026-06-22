@@ -5,10 +5,8 @@ import java.util.UUID;
 
 public record TimerSettingRequestDto(
         UUID uuid,
-        UUID timerOptionId,
+        UUID timerOptionUuid,
         LocalDateTime createdAt,
         LocalDateTime updatedAt
 ) {
 }
-
-
