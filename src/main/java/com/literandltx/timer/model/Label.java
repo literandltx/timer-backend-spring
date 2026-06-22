@@ -6,7 +6,6 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import jakarta.persistence.UniqueConstraint;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -23,11 +22,7 @@ import lombok.experimental.SuperBuilder;
 @AllArgsConstructor
 @SuperBuilder
 @Entity
-@Table(name = "labels", uniqueConstraints = {
-        @UniqueConstraint(
-                columnNames = {"user_id", "name"}
-        )
-})
+@Table(name = "labels")
 public class Label extends SyncEntity implements UserOwned {
 
     @Column(name = "name", nullable = false)

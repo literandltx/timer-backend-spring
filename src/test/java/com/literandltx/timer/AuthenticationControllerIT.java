@@ -10,9 +10,13 @@ import static org.hamcrest.Matchers.oneOf;
 
 import com.literandltx.timer.dto.user.UserLoginRequestDto;
 import com.literandltx.timer.dto.user.UserRegistrationRequestDto;
+import com.literandltx.timer.model.Role;
+import com.literandltx.timer.model.RoleName;
 import com.literandltx.timer.model.User;
+import com.literandltx.timer.repository.RoleRepository;
 import com.literandltx.timer.repository.UserRepository;
 import io.restassured.http.ContentType;
+import java.util.Set;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -28,6 +32,9 @@ public class AuthenticationControllerIT extends BaseIntegrationTest {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private RoleRepository roleRepository;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -69,9 +76,13 @@ public class AuthenticationControllerIT extends BaseIntegrationTest {
 
     @Test
     void shouldLoginAndReturnToken_WhenCredentialsAreValid() {
+        Role userRole = roleRepository.findByName(RoleName.USER)
+                .orElseThrow(() -> new IllegalStateException("USER role not found"));
+
         User existingUser = new User();
         existingUser.setEmail(userEmail);
         existingUser.setPassword(passwordEncoder.encode(userPlainPassword));
+        existingUser.setRoles(Set.of(userRole));
         userRepository.save(existingUser);
 
         UserLoginRequestDto loginRequest = new UserLoginRequestDto();
@@ -113,9 +124,13 @@ public class AuthenticationControllerIT extends BaseIntegrationTest {
 
     @Test
     void shouldAccessProtectedResource_WhenTokenIsValid() {
+        Role userRole = roleRepository.findByName(RoleName.USER)
+                .orElseThrow(() -> new IllegalStateException("USER role not found"));
+
         User existingUser = new User();
         existingUser.setEmail(userEmail);
         existingUser.setPassword(passwordEncoder.encode(userPlainPassword));
+        existingUser.setRoles(Set.of(userRole));
         userRepository.save(existingUser);
 
         UserLoginRequestDto loginRequest = new UserLoginRequestDto();

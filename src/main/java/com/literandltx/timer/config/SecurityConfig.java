@@ -32,7 +32,8 @@ public class SecurityConfig {
             "/v3/api-docs/**",
             "/v2/api-docs/**",
             "/swagger-ui/**",
-            "/swagger-resources/**"
+            "/swagger-resources/**",
+            "/ws-stomp/**"
     };
 
     private static final List<String> ALLOWED_ORIGINS = List.of(

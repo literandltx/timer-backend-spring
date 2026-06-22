@@ -5,11 +5,13 @@ import static com.literandltx.timer.validation.OwnershipValidator.validateOwners
 import com.literandltx.timer.dto.option.TimerOptionCreateRequestDto;
 import com.literandltx.timer.dto.option.TimerOptionResponseDto;
 import com.literandltx.timer.dto.option.TimerOptionUpdateRequestDto;
+import com.literandltx.timer.dto.sync.SyncAction;
 import com.literandltx.timer.mapper.TimerOptionMapper;
 import com.literandltx.timer.model.TimerOption;
 import com.literandltx.timer.model.User;
 import com.literandltx.timer.repository.TimerOptionRepository;
 import com.literandltx.timer.service.TimerOptionService;
+import com.literandltx.timer.service.WebSocketBroadcastService;
 import jakarta.persistence.EntityNotFoundException;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -26,6 +28,9 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class TimerOptionServiceImpl implements TimerOptionService {
 
+    private static final String WS_DESTINATION = "/queue/timer-options";
+
+    private final WebSocketBroadcastService broadcastService;
     private final TimerOptionRepository timerOptionRepository;
     private final TimerOptionMapper timerOptionMapper;
 
@@ -47,8 +52,10 @@ public class TimerOptionServiceImpl implements TimerOptionService {
 
         TimerOption timerOption = timerOptionMapper.toTimerOption(request, authUser);
         TimerOption savedTimerOption = timerOptionRepository.save(timerOption);
+        TimerOptionResponseDto response = timerOptionMapper.toResponseDto(savedTimerOption);
 
-        return timerOptionMapper.toResponseDto(savedTimerOption);
+        broadcastService.broadcast(authUser.getEmail(), WS_DESTINATION, SyncAction.CREATE, response);
+        return response;
     }
 
     @Override
@@ -89,8 +96,10 @@ public class TimerOptionServiceImpl implements TimerOptionService {
 
         TimerOption updatedOption = timerOptionRepository.save(existingOption);
         log.debug("Successfully updated timer option with ID: {}", updatedOption.getUuid());
+        TimerOptionResponseDto response = timerOptionMapper.toResponseDto(updatedOption);
 
-        return timerOptionMapper.toResponseDto(updatedOption);
+        broadcastService.broadcast(authUser.getEmail(), WS_DESTINATION, SyncAction.UPDATE, response);
+        return response;
     }
 
     @Override
@@ -105,9 +114,10 @@ public class TimerOptionServiceImpl implements TimerOptionService {
 
         option.setDeleted(true);
         option.setUpdatedAt(LocalDateTime.now());
-        timerOptionRepository.save(option);
+        TimerOption savedOption = timerOptionRepository.save(option);
 
         log.info("Timer option with id: {} deleted successfully", id);
+        broadcastService.broadcast(authUser.getEmail(), WS_DESTINATION, SyncAction.DELETE, timerOptionMapper.toResponseDto(savedOption));
     }
 
 }

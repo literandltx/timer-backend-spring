@@ -12,9 +12,12 @@ import com.literandltx.timer.dto.entry.TimerEntryCreateRequestDto;
 import com.literandltx.timer.dto.entry.TimerEntryUpdateRequestDto;
 import com.literandltx.timer.dto.user.UserLoginRequestDto;
 import com.literandltx.timer.model.Label;
+import com.literandltx.timer.model.Role;
+import com.literandltx.timer.model.RoleName;
 import com.literandltx.timer.model.TimerEntry;
 import com.literandltx.timer.model.User;
 import com.literandltx.timer.repository.LabelRepository;
+import com.literandltx.timer.repository.RoleRepository;
 import com.literandltx.timer.repository.TimerEntryRepository;
 import com.literandltx.timer.repository.UserRepository;
 import io.restassured.http.ContentType;
@@ -23,6 +26,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -46,6 +50,9 @@ public class TimerEntryControllerIT extends BaseIntegrationTest {
     private LabelRepository labelRepository;
 
     @Autowired
+    private RoleRepository roleRepository;
+
+    @Autowired
     private PasswordEncoder passwordEncoder;
 
     @Autowired
@@ -61,9 +68,13 @@ public class TimerEntryControllerIT extends BaseIntegrationTest {
     void setUpUser() {
         super.setUp();
 
+        Role userRole = roleRepository.findByName(RoleName.USER)
+                .orElseThrow(() -> new IllegalStateException("USER role not found in test DB"));
+
         testUser = User.builder()
                 .email(userEmail)
                 .password(passwordEncoder.encode(userPlainPassword))
+                .roles(Set.of(userRole))
                 .build();
         userRepository.save(testUser);
 

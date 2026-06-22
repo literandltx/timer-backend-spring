@@ -4,6 +4,7 @@ import static com.literandltx.timer.validation.OwnershipValidator.validateOwners
 
 import com.literandltx.timer.dto.settings.TimerSettingRequestDto;
 import com.literandltx.timer.dto.settings.TimerSettingResponseDto;
+import com.literandltx.timer.dto.sync.SyncAction;
 import com.literandltx.timer.mapper.TimerSettingMapper;
 import com.literandltx.timer.model.TimerOption;
 import com.literandltx.timer.model.TimerSetting;
@@ -11,6 +12,7 @@ import com.literandltx.timer.model.User;
 import com.literandltx.timer.repository.TimerOptionRepository;
 import com.literandltx.timer.repository.TimerSettingRepository;
 import com.literandltx.timer.service.TimerSettingService;
+import com.literandltx.timer.service.WebSocketBroadcastService;
 import jakarta.persistence.EntityNotFoundException;
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -24,6 +26,9 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class TimerSettingServiceImpl implements TimerSettingService {
 
+    private static final String WS_DESTINATION = "/queue/timer-settings";
+
+    private final WebSocketBroadcastService broadcastService;
     private final TimerSettingRepository timerSettingRepository;
     private final TimerOptionRepository timerOptionRepository;
     private final TimerSettingMapper timerSettingMapper;
@@ -33,8 +38,8 @@ public class TimerSettingServiceImpl implements TimerSettingService {
     public TimerSettingResponseDto upsert(TimerSettingRequestDto request, User authUser) {
         log.info("Upserting timer settings for user: {}", authUser.getId());
 
-        TimerOption option = timerOptionRepository.findById(request.timerOptionId())
-                .orElseThrow(() -> new EntityNotFoundException("Timer option with id " + request.timerOptionId() + " not found"));
+        TimerOption option = timerOptionRepository.findById(request.timerOptionUuid())
+                .orElseThrow(() -> new EntityNotFoundException("Timer option with id " + request.timerOptionUuid() + " not found"));
 
         validateOwnership(option, authUser);
 
@@ -55,7 +60,11 @@ public class TimerSettingServiceImpl implements TimerSettingService {
         timerSetting.setUpdatedAt(LocalDateTime.now());
 
         TimerSetting savedSetting = timerSettingRepository.save(timerSetting);
-        return timerSettingMapper.toResponseDto(savedSetting);
+        TimerSettingResponseDto response = timerSettingMapper.toResponseDto(savedSetting);
+
+        broadcastService.broadcast(authUser.getEmail(), WS_DESTINATION, SyncAction.UPDATE, response);
+
+        return response;
     }
 
     @Override

@@ -5,6 +5,7 @@ import static com.literandltx.timer.validation.OwnershipValidator.validateOwners
 import com.literandltx.timer.dto.entry.TimerEntryCreateRequestDto;
 import com.literandltx.timer.dto.entry.TimerEntryResponseDto;
 import com.literandltx.timer.dto.entry.TimerEntryUpdateRequestDto;
+import com.literandltx.timer.dto.sync.SyncAction;
 import com.literandltx.timer.mapper.TimerEntryMapper;
 import com.literandltx.timer.model.Label;
 import com.literandltx.timer.model.TimerEntry;
@@ -12,6 +13,7 @@ import com.literandltx.timer.model.User;
 import com.literandltx.timer.repository.LabelRepository;
 import com.literandltx.timer.repository.TimerEntryRepository;
 import com.literandltx.timer.service.TimerEntryService;
+import com.literandltx.timer.service.WebSocketBroadcastService;
 import jakarta.persistence.EntityNotFoundException;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -28,6 +30,9 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class TimerEntryServiceImpl implements TimerEntryService {
 
+    private static final String WS_DESTINATION = "/queue/timer-entries";
+
+    private final WebSocketBroadcastService broadcastService;
     private final TimerEntryRepository timerEntryRepository;
     private final LabelRepository labelRepository;
     private final TimerEntryMapper timerEntryMapper;
@@ -58,8 +63,10 @@ public class TimerEntryServiceImpl implements TimerEntryService {
         }
 
         TimerEntry savedEntry = timerEntryRepository.save(timerEntry);
+        TimerEntryResponseDto response = timerEntryMapper.toResponseDto(savedEntry);
 
-        return timerEntryMapper.toResponseDto(savedEntry);
+        broadcastService.broadcast(authUser.getEmail(), WS_DESTINATION, SyncAction.CREATE, response);
+        return response;
     }
 
     @Override
@@ -108,8 +115,10 @@ public class TimerEntryServiceImpl implements TimerEntryService {
 
         TimerEntry updatedEntry = timerEntryRepository.save(existingEntry);
         log.debug("Successfully updated timer entry with ID: {}", updatedEntry.getUuid());
+        TimerEntryResponseDto response = timerEntryMapper.toResponseDto(updatedEntry);
 
-        return timerEntryMapper.toResponseDto(updatedEntry);
+        broadcastService.broadcast(authUser.getEmail(), WS_DESTINATION, SyncAction.UPDATE, response);
+        return response;
     }
 
     @Override
@@ -124,9 +133,10 @@ public class TimerEntryServiceImpl implements TimerEntryService {
 
         entry.setDeleted(true);
         entry.setUpdatedAt(LocalDateTime.now());
-        timerEntryRepository.save(entry);
+        TimerEntry savedEntry = timerEntryRepository.save(entry);
 
         log.info("Timer entry with id: {} deleted successfully", id);
+        broadcastService.broadcast(authUser.getEmail(), WS_DESTINATION, SyncAction.DELETE, timerEntryMapper.toResponseDto(savedEntry));
     }
 
 }

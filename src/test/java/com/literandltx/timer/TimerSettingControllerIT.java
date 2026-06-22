@@ -6,9 +6,12 @@ import static org.hamcrest.Matchers.notNullValue;
 
 import com.literandltx.timer.dto.settings.TimerSettingRequestDto;
 import com.literandltx.timer.dto.user.UserLoginRequestDto;
+import com.literandltx.timer.model.Role;
+import com.literandltx.timer.model.RoleName;
 import com.literandltx.timer.model.TimerOption;
 import com.literandltx.timer.model.TimerSetting;
 import com.literandltx.timer.model.User;
+import com.literandltx.timer.repository.RoleRepository;
 import com.literandltx.timer.repository.TimerOptionRepository;
 import com.literandltx.timer.repository.TimerSettingRepository;
 import com.literandltx.timer.repository.UserRepository;
@@ -17,6 +20,7 @@ import io.restassured.response.Response;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
+import java.util.Set;
 import java.util.UUID;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -38,6 +42,9 @@ public class TimerSettingControllerIT extends BaseIntegrationTest {
     private TimerOptionRepository timerOptionRepository;
 
     @Autowired
+    private RoleRepository roleRepository;
+
+    @Autowired
     private PasswordEncoder passwordEncoder;
 
     @Autowired
@@ -53,9 +60,13 @@ public class TimerSettingControllerIT extends BaseIntegrationTest {
     void setUpUser() {
         super.setUp();
 
+        Role userRole = roleRepository.findByName(RoleName.USER)
+                .orElseThrow(() -> new IllegalStateException("USER role not found in test DB"));
+
         testUser = User.builder()
                 .email(userEmail)
                 .password(passwordEncoder.encode(userPlainPassword))
+                .roles(Set.of(userRole))
                 .build();
         userRepository.save(testUser);
 
@@ -112,7 +123,7 @@ public class TimerSettingControllerIT extends BaseIntegrationTest {
                 .header("Authorization", "Bearer " + authToken)
                 .body(request)
                 .when()
-                .put("/api/settings");
+                .put("/api/v1/timer-settings");
 
         // 3. Assert
         response.then()
@@ -149,7 +160,7 @@ public class TimerSettingControllerIT extends BaseIntegrationTest {
                 .header("Authorization", "Bearer " + authToken)
                 .body(updateRequest)
                 .when()
-                .put("/api/settings");
+                .put("/api/v1/timer-settings");
 
         // 3. Assert
         response.then()
@@ -175,7 +186,7 @@ public class TimerSettingControllerIT extends BaseIntegrationTest {
                 .contentType(ContentType.JSON)
                 .header("Authorization", "Bearer " + authToken)
                 .when()
-                .get("/api/settings/sync");
+                .get("/api/v1/timer-settings/sync");
 
         // 3. Assert
         response.then()
@@ -193,7 +204,7 @@ public class TimerSettingControllerIT extends BaseIntegrationTest {
                 .contentType(ContentType.JSON)
                 .header("Authorization", "Bearer " + authToken)
                 .when()
-                .get("/api/settings/sync");
+                .get("/api/v1/timer-settings/sync");
 
         // 3. Assert
         response.then()
@@ -224,7 +235,7 @@ public class TimerSettingControllerIT extends BaseIntegrationTest {
                 .header("Authorization", "Bearer " + authToken)
                 .queryParam("updatedAfter", isoDate)
                 .when()
-                .get("/api/settings/sync");
+                .get("/api/v1/timer-settings/sync");
 
         // 3. Assert
         response.then()
@@ -256,7 +267,7 @@ public class TimerSettingControllerIT extends BaseIntegrationTest {
                 .header("Authorization", "Bearer " + authToken)
                 .queryParam("updatedAfter", isoDate)
                 .when()
-                .get("/api/settings/sync");
+                .get("/api/v1/timer-settings/sync");
 
         // 3. Assert
         response.then()
