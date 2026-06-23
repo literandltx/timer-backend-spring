@@ -34,4 +34,9 @@ public interface ActiveDeviceTracker {
      */
     UserPingResponse registerAndFindUserPing(String username, UUID deviceUuid);
 
+    /**
+     * Clears all active devices from the cache entirely.
+     */
+    void clear();
+
 }

@@ -55,6 +55,11 @@ public class ActiveDeviceTrackerImpl implements ActiveDeviceTracker {
         );
     }
 
+    @Override
+    public void clear() {
+        userDevicesCache.clear();
+    }
+
     /**
      * Runs every 65 seconds (65000 ms).
      * Removes devices that haven't pinged within the DEVICE_TTL_MS window.
