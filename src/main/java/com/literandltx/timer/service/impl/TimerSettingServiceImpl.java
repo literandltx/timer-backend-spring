@@ -83,8 +83,14 @@ public class TimerSettingServiceImpl implements TimerSettingService {
             setting = deltaSetting.get();
         } else {
             log.debug("Fetching current setting");
-            setting = timerSettingRepository.findByUserId(authUser.getId())
-                    .orElseThrow(() -> new EntityNotFoundException("Setting not found for user " + authUser.getId()));
+            Optional<TimerSetting> currentSetting = timerSettingRepository.findByUserId(authUser.getId());
+
+            if (currentSetting.isEmpty()) {
+                log.debug("No setting found for user {}", authUser.getId());
+                return null;
+            }
+
+            setting = currentSetting.get();
         }
 
         return timerSettingMapper.toResponseDto(setting);
