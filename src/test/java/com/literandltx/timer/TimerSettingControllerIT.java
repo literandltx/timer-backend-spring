@@ -209,7 +209,7 @@ public class TimerSettingControllerIT extends BaseIntegrationTest {
         // 3. Assert
         response.then()
                 .log().ifValidationFails()
-                .statusCode(HttpStatus.NOT_FOUND.value());
+                .statusCode(HttpStatus.NO_CONTENT.value());
     }
 
     @Test
@@ -272,6 +272,6 @@ public class TimerSettingControllerIT extends BaseIntegrationTest {
         // 3. Assert
         response.then()
                 .log().ifValidationFails()
-                .statusCode(HttpStatus.NOT_MODIFIED.value());
+                .statusCode(HttpStatus.NO_CONTENT.value());
     }
 }

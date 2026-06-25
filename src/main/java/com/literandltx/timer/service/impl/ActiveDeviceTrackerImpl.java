@@ -7,9 +7,11 @@ import com.literandltx.timer.service.ActiveDeviceTracker;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+@Slf4j
 @Service
 public class ActiveDeviceTrackerImpl implements ActiveDeviceTracker {
 
@@ -48,6 +50,7 @@ public class ActiveDeviceTrackerImpl implements ActiveDeviceTracker {
 
         int activeCount = userDevicesCache.get(username).size();
 
+        log.info("Active devices: {}, uuid: {}, ", userDevicesCache.get(username).size(), deviceUuid);
         return new UserPingResponse(
                 SystemStatus.UP,
                 username,

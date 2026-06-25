@@ -1,7 +1,6 @@
 package com.literandltx.timer.security;
 
 import com.literandltx.timer.dto.user.UserLoginRequestDto;
-import com.literandltx.timer.dto.user.UserLoginResponseDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -14,15 +13,12 @@ public class AuthenticationService {
     private final JwtUtil jwtUtil;
     private final AuthenticationManager authenticationManager;
 
-    public UserLoginResponseDto authenticate(UserLoginRequestDto requestDto) {
+    public String authenticate(UserLoginRequestDto requestDto) {
         final Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         requestDto.getUsername(), requestDto.getPassword())
         );
 
-        String token = jwtUtil.generateToken(requestDto.getUsername());
-        UserLoginResponseDto responseDto = new UserLoginResponseDto();
-        responseDto.setToken(token);
-        return responseDto;
+        return jwtUtil.generateToken(authentication.getName());
     }
 }

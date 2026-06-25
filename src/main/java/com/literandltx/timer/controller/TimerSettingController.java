@@ -41,7 +41,7 @@ public class TimerSettingController {
         TimerSettingResponseDto response = timerSettingService.find(updatedAfter, user);
 
         if (response == null) {
-            return ResponseEntity.status(HttpStatus.NOT_MODIFIED).build();
+            return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
         }
 
         return ResponseEntity.ok(response);

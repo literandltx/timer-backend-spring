@@ -6,9 +6,13 @@ import com.literandltx.timer.dto.user.UserRegistrationRequestDto;
 import com.literandltx.timer.dto.user.UserRegistrationResponseDto;
 import com.literandltx.timer.security.AuthenticationService;
 import com.literandltx.timer.service.UserService;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
+import java.time.Duration;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -24,8 +28,21 @@ public class AuthenticationController {
     private final AuthenticationService authenticationService;
 
     @PostMapping("/login")
-    public UserLoginResponseDto login(@RequestBody @Valid UserLoginRequestDto request) {
-        return authenticationService.authenticate(request);
+    public ResponseEntity<UserLoginResponseDto> login(@RequestBody @Valid UserLoginRequestDto request, HttpServletResponse response) {
+        String token = authenticationService.authenticate(request);
+
+        ResponseCookie cookie = ResponseCookie.from("AUTH_TOKEN", token)
+                .httpOnly(true)
+                .secure(true)
+                .path("/")
+                .sameSite("Strict")
+                .maxAge(Duration.ofMinutes(90))
+                .build();
+
+        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+        UserLoginResponseDto responseBody = new UserLoginResponseDto(token);
+
+        return ResponseEntity.ok(responseBody);
     }
 
     @PostMapping("/register")
