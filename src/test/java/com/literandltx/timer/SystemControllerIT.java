@@ -111,6 +111,7 @@ public class SystemControllerIT extends BaseIntegrationTest {
         activeDeviceTracker.clear();
 
         jdbcTemplate.execute("DELETE FROM users_roles");
+        jdbcTemplate.execute("DELETE FROM refresh_tokens");
         jdbcTemplate.execute("DELETE FROM users");
     }
 
