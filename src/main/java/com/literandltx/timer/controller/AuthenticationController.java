@@ -32,6 +32,14 @@ public class AuthenticationController {
     @Value("${jwt.refresh.expiration}")
     private Long refreshTokenDurationMs;
 
+    @PostMapping("/register")
+    public ResponseEntity<UserRegistrationResponseDto> register(@RequestBody @Valid UserRegistrationRequestDto request) {
+        UserRegistrationResponseDto response = userService.register(request);
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(response);
+    }
+
     @PostMapping("/login")
     public ResponseEntity<UserLoginResponseDto> login(@RequestBody @Valid UserLoginRequestDto request) {
         AuthTokensDto tokens = authenticationService.login(request);
@@ -57,12 +65,25 @@ public class AuthenticationController {
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/register")
-    public ResponseEntity<UserRegistrationResponseDto> register(@RequestBody @Valid UserRegistrationRequestDto request) {
-        UserRegistrationResponseDto response = userService.register(request);
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(response);
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout(
+            @CookieValue(name = "REFRESH_TOKEN", required = false) String refreshToken
+    ) {
+        if (refreshToken != null) {
+            authenticationService.logout(refreshToken);
+        }
+
+        ResponseCookie cookie = ResponseCookie.from("REFRESH_TOKEN", "")
+                .httpOnly(true)
+                .secure(true)
+                .path("/api/v1/auth/refresh")
+                .sameSite("Strict")
+                .maxAge(0)
+                .build();
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, cookie.toString())
+                .build();
     }
 
 }

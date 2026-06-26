@@ -72,4 +72,10 @@ public class AuthenticationService {
         return new UserLoginResponseDto(newAccessToken);
     }
 
+    @Transactional
+    public void logout(String refreshToken) {
+        refreshTokenRepository.findByToken(refreshToken)
+                .ifPresent(refreshTokenRepository::delete);
+    }
+
 }
