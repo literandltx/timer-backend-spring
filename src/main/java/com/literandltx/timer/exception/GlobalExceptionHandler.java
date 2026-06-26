@@ -3,6 +3,7 @@ package com.literandltx.timer.exception;
 import com.literandltx.timer.exception.custom.FileProcessingException;
 import com.literandltx.timer.exception.custom.FileStorageException;
 import com.literandltx.timer.exception.custom.InvalidFileFormatException;
+import com.literandltx.timer.exception.custom.TokenRefreshException;
 import com.literandltx.timer.exception.custom.UnsupportedFileExtensionException;
 import com.literandltx.timer.exception.custom.UserAlreadyExistsException;
 import jakarta.persistence.EntityNotFoundException;
@@ -19,6 +20,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.validation.FieldError;
 import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingRequestCookieException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
@@ -234,6 +236,38 @@ public class GlobalExceptionHandler {
         );
 
         log.error("File processing error: {}", exception.getMessage());
+
+        return new ResponseEntity<>(apiError, new HttpHeaders(), apiError.getStatus());
+    }
+
+    @ExceptionHandler(TokenRefreshException.class)
+    public ResponseEntity<Object> handleTokenRefreshException(
+            final TokenRefreshException exception,
+            final WebRequest request
+    ) {
+        final ApiError apiError = new ApiError(
+                HttpStatus.FORBIDDEN,
+                exception.getLocalizedMessage(),
+                "Refresh token is invalid or expired. Please log in again."
+        );
+
+        log.warn("Token refresh failed: {}", exception.getMessage());
+
+        return new ResponseEntity<>(apiError, new HttpHeaders(), apiError.getStatus());
+    }
+
+    @ExceptionHandler(MissingRequestCookieException.class)
+    public ResponseEntity<Object> handleMissingCookie(
+            final org.springframework.web.bind.MissingRequestCookieException exception,
+            final WebRequest request
+    ) {
+        final ApiError apiError = new ApiError(
+                HttpStatus.UNAUTHORIZED,
+                exception.getLocalizedMessage(),
+                "Missing required cookie: " + exception.getCookieName()
+        );
+
+        log.warn("Missing cookie: {}", exception.getMessage());
 
         return new ResponseEntity<>(apiError, new HttpHeaders(), apiError.getStatus());
     }

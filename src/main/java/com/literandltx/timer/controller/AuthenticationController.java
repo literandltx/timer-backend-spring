@@ -1,19 +1,21 @@
 package com.literandltx.timer.controller;
 
+import com.literandltx.timer.dto.user.AuthTokensDto;
 import com.literandltx.timer.dto.user.UserLoginRequestDto;
 import com.literandltx.timer.dto.user.UserLoginResponseDto;
 import com.literandltx.timer.dto.user.UserRegistrationRequestDto;
 import com.literandltx.timer.dto.user.UserRegistrationResponseDto;
 import com.literandltx.timer.security.AuthenticationService;
 import com.literandltx.timer.service.UserService;
-import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import java.time.Duration;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -27,22 +29,32 @@ public class AuthenticationController {
     private final UserService userService;
     private final AuthenticationService authenticationService;
 
-    @PostMapping("/login")
-    public ResponseEntity<UserLoginResponseDto> login(@RequestBody @Valid UserLoginRequestDto request, HttpServletResponse response) {
-        String token = authenticationService.authenticate(request);
+    @Value("${jwt.refresh.expiration}")
+    private Long refreshTokenDurationMs;
 
-        ResponseCookie cookie = ResponseCookie.from("AUTH_TOKEN", token)
+    @PostMapping("/login")
+    public ResponseEntity<UserLoginResponseDto> login(@RequestBody @Valid UserLoginRequestDto request) {
+        AuthTokensDto tokens = authenticationService.login(request);
+
+        ResponseCookie cookie = ResponseCookie.from("REFRESH_TOKEN", tokens.refreshToken())
                 .httpOnly(true)
                 .secure(true)
-                .path("/")
+                .path("/api/v1/auth/refresh")
                 .sameSite("Strict")
-                .maxAge(Duration.ofMinutes(90))
+                .maxAge(Duration.ofMillis(refreshTokenDurationMs))
                 .build();
 
-        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
-        UserLoginResponseDto responseBody = new UserLoginResponseDto(token);
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, cookie.toString())
+                .body(new UserLoginResponseDto(tokens.accessToken()));
+    }
 
-        return ResponseEntity.ok(responseBody);
+    @PostMapping("/refresh")
+    public ResponseEntity<UserLoginResponseDto> refresh(
+            @CookieValue(name = "REFRESH_TOKEN") String refreshToken
+    ) {
+        UserLoginResponseDto response = authenticationService.refreshAccessToken(refreshToken);
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/register")

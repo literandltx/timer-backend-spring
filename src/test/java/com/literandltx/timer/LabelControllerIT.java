@@ -90,6 +90,7 @@ public class LabelControllerIT extends BaseIntegrationTest {
         super.tearDown();
         jdbcTemplate.execute("DELETE FROM labels");
         jdbcTemplate.execute("DELETE FROM users_roles");
+        jdbcTemplate.execute("DELETE FROM refresh_tokens");
         jdbcTemplate.execute("DELETE FROM users");
     }
 

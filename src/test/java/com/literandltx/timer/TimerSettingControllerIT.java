@@ -101,6 +101,7 @@ public class TimerSettingControllerIT extends BaseIntegrationTest {
         jdbcTemplate.execute("DELETE FROM timer_settings");
         jdbcTemplate.execute("DELETE FROM timer_options");
         jdbcTemplate.execute("DELETE FROM users_roles");
+        jdbcTemplate.execute("DELETE FROM refresh_tokens");
         jdbcTemplate.execute("DELETE FROM users");
     }
 
