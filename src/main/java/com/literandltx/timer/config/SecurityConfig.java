@@ -26,9 +26,6 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 @Configuration
 public class SecurityConfig {
 
-    @Value("${cors.allowed-origins}")
-    private List<String> allowedOrigins;
-
     private static final String[] AUTH_WHITE_LIST = {
             "/api/v1/auth/**",
             "/api/v1/system/ping/public",
@@ -47,6 +44,9 @@ public class SecurityConfig {
     private static final List<String> ALLOWED_HEADERS = List.of(
             "Authorization", "Content-Type", "X-Requested-With", "Accept"
     );
+
+    @Value("${cors.allowed-origins}")
+    private List<String> allowedOrigins;
 
     private final UserDetailsService userDetailsService;
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
