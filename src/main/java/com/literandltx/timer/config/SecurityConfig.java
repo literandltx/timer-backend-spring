@@ -5,6 +5,7 @@ import static org.springframework.security.config.Customizer.withDefaults;
 import com.literandltx.timer.security.JwtAuthenticationFilter;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -36,12 +37,6 @@ public class SecurityConfig {
             "/ws-stomp/**"
     };
 
-    private static final List<String> ALLOWED_ORIGINS = List.of(
-            "http://localhost:3000",
-            "http://localhost:4200",
-            "http://localhost:5173"
-    );
-
     private static final List<String> ALLOWED_METHODS = List.of(
             "GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"
     );
@@ -49,6 +44,9 @@ public class SecurityConfig {
     private static final List<String> ALLOWED_HEADERS = List.of(
             "Authorization", "Content-Type", "X-Requested-With", "Accept"
     );
+
+    @Value("${cors.allowed-origins}")
+    private List<String> allowedOrigins;
 
     private final UserDetailsService userDetailsService;
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
@@ -86,7 +84,7 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        configuration.setAllowedOrigins(ALLOWED_ORIGINS);
+        configuration.setAllowedOrigins(allowedOrigins);
         configuration.setAllowedMethods(ALLOWED_METHODS);
         configuration.setAllowedHeaders(ALLOWED_HEADERS);
         configuration.setAllowCredentials(true);

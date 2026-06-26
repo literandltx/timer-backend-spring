@@ -32,6 +32,12 @@ public class AuthenticationController {
     @Value("${jwt.refresh.expiration}")
     private Long refreshTokenDurationMs;
 
+    @Value("${cookie.secure}")
+    private boolean cookieSecure;
+
+    @Value("${cookie.same-site}")
+    private String cookieSameSite;
+
     @PostMapping("/register")
     public ResponseEntity<UserRegistrationResponseDto> register(@RequestBody @Valid UserRegistrationRequestDto request) {
         UserRegistrationResponseDto response = userService.register(request);
@@ -46,9 +52,9 @@ public class AuthenticationController {
 
         ResponseCookie cookie = ResponseCookie.from("REFRESH_TOKEN", tokens.refreshToken())
                 .httpOnly(true)
-                .secure(true)
+                .secure(cookieSecure)
                 .path("/api/v1/auth/refresh")
-                .sameSite("Strict")
+                .sameSite(cookieSameSite)
                 .maxAge(Duration.ofMillis(refreshTokenDurationMs))
                 .build();
 
@@ -75,9 +81,9 @@ public class AuthenticationController {
 
         ResponseCookie cookie = ResponseCookie.from("REFRESH_TOKEN", "")
                 .httpOnly(true)
-                .secure(true)
+                .secure(cookieSecure)
                 .path("/api/v1/auth/refresh")
-                .sameSite("Strict")
+                .sameSite(cookieSameSite)
                 .maxAge(0)
                 .build();
 
