@@ -1,9 +1,12 @@
 package com.literandltx.timer.service.impl;
 
+import static com.literandltx.timer.security.AuthenticationService.MAX_ACTIVE_DEVICES;
+
 import com.literandltx.timer.dto.actuator.AdminDevicesResponse;
 import com.literandltx.timer.dto.actuator.SystemStatus;
 import com.literandltx.timer.dto.actuator.UserPingResponse;
 import com.literandltx.timer.service.ActiveDeviceTracker;
+import java.util.Collections;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -44,13 +47,18 @@ public class ActiveDeviceTrackerImpl implements ActiveDeviceTracker {
 
     @Override
     public UserPingResponse registerAndFindUserPing(String username, UUID deviceUuid) {
-        userDevicesCache
-                .computeIfAbsent(username, k -> new ConcurrentHashMap<>())
-                .put(deviceUuid, System.currentTimeMillis());
+        Map<UUID, Long> userDevices = userDevicesCache.computeIfAbsent(username, k -> new ConcurrentHashMap<>());
 
-        int activeCount = userDevicesCache.get(username).size();
+        userDevices.put(deviceUuid, System.currentTimeMillis());
 
-        log.info("Active devices: {}, uuid: {}, ", userDevicesCache.get(username).size(), deviceUuid);
+        if (userDevices.size() > MAX_ACTIVE_DEVICES) {
+            UUID oldestDeviceUuid = Collections.min(userDevices.entrySet(), Map.Entry.comparingByValue()).getKey();
+            userDevices.remove(oldestDeviceUuid);
+            log.debug("Removed stale tracked device {} for user {} due to MAX_TRACKED_DEVICES limit", oldestDeviceUuid, username);
+        }
+
+        int activeCount = userDevices.size();
+        log.info("Active devices: {}, uuid: {}", activeCount, deviceUuid);
         return new UserPingResponse(
                 SystemStatus.UP,
                 username,

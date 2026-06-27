@@ -51,7 +51,7 @@ public class AuthenticationController {
         ResponseCookie cookie = ResponseCookie.from("REFRESH_TOKEN", tokens.refreshToken())
                 .httpOnly(true)
                 .secure(webPropertiesConfig.cookie().secure())
-                .path("/api/v1/auth/refresh")
+                .path("/api/v1/auth")
                 .sameSite(webPropertiesConfig.cookie().sameSite())
                 .maxAge(Duration.ofMillis(jwtConfig.expiration()))
                 .build();
@@ -73,14 +73,12 @@ public class AuthenticationController {
     public ResponseEntity<Void> logout(
             @CookieValue(name = "REFRESH_TOKEN", required = false) String refreshToken
     ) {
-        if (refreshToken != null) {
-            authenticationService.logout(refreshToken);
-        }
+        authenticationService.logout(refreshToken);
 
         ResponseCookie cookie = ResponseCookie.from("REFRESH_TOKEN", "")
                 .httpOnly(true)
                 .secure(webPropertiesConfig.cookie().secure())
-                .path("/api/v1/auth/refresh")
+                .path("/api/v1/auth")
                 .sameSite(webPropertiesConfig.cookie().sameSite())
                 .maxAge(0)
                 .build();
