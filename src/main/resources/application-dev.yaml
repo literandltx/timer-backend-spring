@@ -16,8 +16,9 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
 
-cors:
-  allowed-origins: "http://localhost:3000,http://localhost:4200,http://localhost:5173,https://literandltx.github.io"
-cookie:
-  secure: true
-  same-site: None
+web:
+  cors:
+    allowed-origins: "http://localhost:3000,http://localhost:4200,http://localhost:5173,https://literandltx.github.io"
+  cookie:
+    secure: true
+    same-site: None

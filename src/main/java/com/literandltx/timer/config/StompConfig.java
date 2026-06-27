@@ -1,9 +1,9 @@
 package com.literandltx.timer.config;
 
+import com.literandltx.timer.config.env.WebPropertiesConfig;
 import com.literandltx.timer.security.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.NonNull;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
@@ -24,9 +24,7 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 public class StompConfig implements WebSocketMessageBrokerConfigurer {
 
     private final JwtUtil jwtUtil;
-
-    @Value("${cors.allowed-origins}")
-    private String[] allowedOrigins;
+    private final WebPropertiesConfig webPropertiesConfig;
 
     @Override
     public void configureMessageBroker(MessageBrokerRegistry config) {
@@ -37,7 +35,7 @@ public class StompConfig implements WebSocketMessageBrokerConfigurer {
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.addEndpoint("/ws-stomp")
-                .setAllowedOrigins(allowedOrigins);
+                .setAllowedOrigins(webPropertiesConfig.cors().allowedOrigins().toArray(String[]::new));
     }
 
     @Override

@@ -1,5 +1,6 @@
 package com.literandltx.timer.security;
 
+import com.literandltx.timer.config.env.JwtConfig;
 import com.literandltx.timer.dto.user.AuthTokensDto;
 import com.literandltx.timer.dto.user.UserLoginRequestDto;
 import com.literandltx.timer.dto.user.UserLoginResponseDto;
@@ -11,7 +12,6 @@ import com.literandltx.timer.repository.UserRepository;
 import java.time.Instant;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -22,9 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class AuthenticationService {
 
-    @Value("${jwt.refresh.expiration}")
-    private Long refreshTokenDurationMs;
-
+    private final JwtConfig jwtConfig;
     private final JwtUtil jwtUtil;
     private final AuthenticationManager authenticationManager;
     private final RefreshTokenRepository refreshTokenRepository;
@@ -49,7 +47,7 @@ public class AuthenticationService {
         RefreshToken refreshToken = RefreshToken.builder()
                 .user(user)
                 .token(UUID.randomUUID().toString())
-                .expiryDate(Instant.now().plusMillis(refreshTokenDurationMs))
+                .expiryDate(Instant.now().plusMillis(jwtConfig.refresh().expiration()))
                 .build();
 
         refreshTokenRepository.save(refreshToken);
