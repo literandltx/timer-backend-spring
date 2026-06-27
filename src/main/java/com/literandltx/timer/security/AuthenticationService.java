@@ -24,7 +24,7 @@ import org.springframework.util.StringUtils;
 @Service
 public class AuthenticationService {
 
-    private static final int MAX_ACTIVE_DEVICES = 3;
+    public static final int MAX_ACTIVE_DEVICES = 3;
 
     private final JwtConfig jwtConfig;
     private final JwtUtil jwtUtil;
