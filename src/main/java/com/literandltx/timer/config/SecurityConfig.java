@@ -2,10 +2,10 @@ package com.literandltx.timer.config;
 
 import static org.springframework.security.config.Customizer.withDefaults;
 
+import com.literandltx.timer.config.env.WebPropertiesConfig;
 import com.literandltx.timer.security.JwtAuthenticationFilter;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -45,9 +45,7 @@ public class SecurityConfig {
             "Authorization", "Content-Type", "X-Requested-With", "Accept"
     );
 
-    @Value("${cors.allowed-origins}")
-    private List<String> allowedOrigins;
-
+    private final WebPropertiesConfig webPropertiesConfig;
     private final UserDetailsService userDetailsService;
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
@@ -84,7 +82,7 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        configuration.setAllowedOrigins(allowedOrigins);
+        configuration.setAllowedOrigins(webPropertiesConfig.cors().allowedOrigins());
         configuration.setAllowedMethods(ALLOWED_METHODS);
         configuration.setAllowedHeaders(ALLOWED_HEADERS);
         configuration.setAllowCredentials(true);

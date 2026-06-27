@@ -1,5 +1,7 @@
 package com.literandltx.timer.controller;
 
+import com.literandltx.timer.config.env.JwtConfig;
+import com.literandltx.timer.config.env.WebPropertiesConfig;
 import com.literandltx.timer.dto.user.AuthTokensDto;
 import com.literandltx.timer.dto.user.UserLoginRequestDto;
 import com.literandltx.timer.dto.user.UserLoginResponseDto;
@@ -10,7 +12,6 @@ import com.literandltx.timer.service.UserService;
 import jakarta.validation.Valid;
 import java.time.Duration;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
@@ -28,18 +29,13 @@ public class AuthenticationController {
 
     private final UserService userService;
     private final AuthenticationService authenticationService;
-
-    @Value("${jwt.refresh.expiration}")
-    private Long refreshTokenDurationMs;
-
-    @Value("${cookie.secure}")
-    private boolean cookieSecure;
-
-    @Value("${cookie.same-site}")
-    private String cookieSameSite;
+    private final JwtConfig jwtConfig;
+    private final WebPropertiesConfig webPropertiesConfig;
 
     @PostMapping("/register")
-    public ResponseEntity<UserRegistrationResponseDto> register(@RequestBody @Valid UserRegistrationRequestDto request) {
+    public ResponseEntity<UserRegistrationResponseDto> register(
+            @RequestBody @Valid UserRegistrationRequestDto request
+    ) {
         UserRegistrationResponseDto response = userService.register(request);
         return ResponseEntity
                 .status(HttpStatus.CREATED)
@@ -47,15 +43,17 @@ public class AuthenticationController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<UserLoginResponseDto> login(@RequestBody @Valid UserLoginRequestDto request) {
+    public ResponseEntity<UserLoginResponseDto> login(
+            @RequestBody @Valid UserLoginRequestDto request
+    ) {
         AuthTokensDto tokens = authenticationService.login(request);
 
         ResponseCookie cookie = ResponseCookie.from("REFRESH_TOKEN", tokens.refreshToken())
                 .httpOnly(true)
-                .secure(cookieSecure)
+                .secure(webPropertiesConfig.cookie().secure())
                 .path("/api/v1/auth/refresh")
-                .sameSite(cookieSameSite)
-                .maxAge(Duration.ofMillis(refreshTokenDurationMs))
+                .sameSite(webPropertiesConfig.cookie().sameSite())
+                .maxAge(Duration.ofMillis(jwtConfig.expiration()))
                 .build();
 
         return ResponseEntity.ok()
@@ -81,9 +79,9 @@ public class AuthenticationController {
 
         ResponseCookie cookie = ResponseCookie.from("REFRESH_TOKEN", "")
                 .httpOnly(true)
-                .secure(cookieSecure)
+                .secure(webPropertiesConfig.cookie().secure())
                 .path("/api/v1/auth/refresh")
-                .sameSite(cookieSameSite)
+                .sameSite(webPropertiesConfig.cookie().sameSite())
                 .maxAge(0)
                 .build();
 
