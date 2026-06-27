@@ -44,13 +44,11 @@ public class ActiveDeviceTrackerImpl implements ActiveDeviceTracker {
 
     @Override
     public UserPingResponse registerAndFindUserPing(String username, UUID deviceUuid) {
-        userDevicesCache
-                .computeIfAbsent(username, k -> new ConcurrentHashMap<>())
-                .put(deviceUuid, System.currentTimeMillis());
+        Map<UUID, Long> userDevices = userDevicesCache.computeIfAbsent(username, k -> new ConcurrentHashMap<>());
+        userDevices.put(deviceUuid, System.currentTimeMillis());
 
-        int activeCount = userDevicesCache.get(username).size();
-
-        log.info("Active devices: {}, uuid: {}, ", userDevicesCache.get(username).size(), deviceUuid);
+        int activeCount = userDevices.size();
+        log.info("Active devices: {}, uuid: {}", activeCount, deviceUuid);
         return new UserPingResponse(
                 SystemStatus.UP,
                 username,
