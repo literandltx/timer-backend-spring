@@ -36,6 +36,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 public class TimerOptionControllerIT extends BaseIntegrationTest {
 
+    private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
+
     @Autowired
     private UserRepository userRepository;
 
@@ -253,8 +255,8 @@ public class TimerOptionControllerIT extends BaseIntegrationTest {
                 .statusCode(HttpStatus.OK.value())
                 .body("uuid", notNullValue())
                 .body("value", equalTo(updatedValue.intValue()))
-                .body("createdAt", equalTo(now.toString()))
-                .body("updatedAt", equalTo(future.toString()))
+                .body("createdAt", equalTo(now.format(FORMATTER)))
+                .body("updatedAt", equalTo(future.format(FORMATTER)))
                 .body("deleted", equalTo(false));
     }
 
