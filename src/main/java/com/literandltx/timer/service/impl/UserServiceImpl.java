@@ -50,6 +50,18 @@ public class UserServiceImpl implements UserService {
         return userMapper.toModel(savedUser);
     }
 
+    @Override
+    @Transactional
+    public void deleteUser(Long id) {
+        log.info("Attempting to delete user with id: {}", id);
+
+        User user = getUserOrThrow(id);
+
+        userRepository.delete(user);
+
+        log.info("Successfully soft-deleted user with id: {}", id);
+    }
+
     private User getUserOrThrow(Long id) {
         return userRepository.findById(id).orElseThrow(
                 () -> new EntityNotFoundException("User with id " + id + " not found")
