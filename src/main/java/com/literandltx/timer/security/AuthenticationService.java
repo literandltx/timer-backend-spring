@@ -10,6 +10,7 @@ import com.literandltx.timer.model.User;
 import com.literandltx.timer.repository.RefreshTokenRepository;
 import com.literandltx.timer.repository.UserRepository;
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -17,10 +18,13 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 @RequiredArgsConstructor
 @Service
 public class AuthenticationService {
+
+    public static final int MAX_ACTIVE_DEVICES = 3;
 
     private final JwtConfig jwtConfig;
     private final JwtUtil jwtUtil;
@@ -41,9 +45,15 @@ public class AuthenticationService {
         User user = userRepository.findByEmailForAuth(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        String accessToken = jwtUtil.generateToken(username);
-        refreshTokenRepository.deleteByUser(user);
+        List<RefreshToken> activeTokens = refreshTokenRepository.findAllByUserOrderByIdAsc(user);
 
+        if (activeTokens.size() >= MAX_ACTIVE_DEVICES) {
+            int excessCount = activeTokens.size() - (MAX_ACTIVE_DEVICES - 1);
+            List<RefreshToken> tokensToDelete = activeTokens.subList(0, excessCount);
+            refreshTokenRepository.deleteAll(tokensToDelete);
+        }
+
+        String accessToken = jwtUtil.generateToken(username);
         RefreshToken refreshToken = RefreshToken.builder()
                 .user(user)
                 .token(UUID.randomUUID().toString())
@@ -72,6 +82,10 @@ public class AuthenticationService {
 
     @Transactional
     public void logout(String refreshToken) {
+        if (!StringUtils.hasText(refreshToken)) {
+            return;
+        }
+
         refreshTokenRepository.findByToken(refreshToken)
                 .ifPresent(refreshTokenRepository::delete);
     }
