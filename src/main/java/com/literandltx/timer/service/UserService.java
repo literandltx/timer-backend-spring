@@ -7,4 +7,6 @@ import org.springframework.stereotype.Service;
 @Service
 public interface UserService {
     UserRegistrationResponseDto register(UserRegistrationRequestDto request);
+
+    void deleteUser(Long id);
 }
