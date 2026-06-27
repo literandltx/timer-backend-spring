@@ -10,9 +10,7 @@ import com.literandltx.timer.dto.user.UserRegistrationResponseDto;
 import com.literandltx.timer.security.AuthenticationService;
 import com.literandltx.timer.service.UserService;
 import jakarta.validation.Valid;
-
 import java.time.Duration;
-
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
