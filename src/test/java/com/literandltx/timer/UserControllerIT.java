@@ -10,10 +10,8 @@ import com.literandltx.timer.model.User;
 import com.literandltx.timer.repository.RoleRepository;
 import com.literandltx.timer.repository.UserRepository;
 import io.restassured.http.ContentType;
-
-import java.util.Set;
-
 import io.restassured.response.Response;
+import java.util.Set;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
