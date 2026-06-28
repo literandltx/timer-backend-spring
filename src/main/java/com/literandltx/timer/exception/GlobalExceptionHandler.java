@@ -3,6 +3,7 @@ package com.literandltx.timer.exception;
 import com.literandltx.timer.exception.custom.FileProcessingException;
 import com.literandltx.timer.exception.custom.FileStorageException;
 import com.literandltx.timer.exception.custom.InvalidFileFormatException;
+import com.literandltx.timer.exception.custom.InvalidTokenTypeException;
 import com.literandltx.timer.exception.custom.TokenRefreshException;
 import com.literandltx.timer.exception.custom.UnsupportedFileExtensionException;
 import com.literandltx.timer.exception.custom.UserAlreadyExistsException;
@@ -268,6 +269,22 @@ public class GlobalExceptionHandler {
         );
 
         log.warn("Missing cookie: {}", exception.getMessage());
+
+        return new ResponseEntity<>(apiError, new HttpHeaders(), apiError.getStatus());
+    }
+
+    @ExceptionHandler(InvalidTokenTypeException.class)
+    public ResponseEntity<Object> handleInvalidTokenType(
+            final InvalidTokenTypeException exception,
+            final WebRequest request
+    ) {
+        final ApiError apiError = new ApiError(
+                HttpStatus.UNAUTHORIZED,
+                exception.getLocalizedMessage(),
+                "Invalid token type provided for this operation."
+        );
+
+        log.warn("Invalid token type attempt: {}", exception.getMessage());
 
         return new ResponseEntity<>(apiError, new HttpHeaders(), apiError.getStatus());
     }

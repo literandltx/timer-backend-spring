@@ -1,5 +1,6 @@
 package com.literandltx.timer.security;
 
+import com.literandltx.timer.config.env.JwtConfig;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.JwtException;
@@ -9,27 +10,31 @@ import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.function.Function;
 import javax.crypto.SecretKey;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 @Component
 public class JwtUtil {
-    @Value("${jwt.expiration}")
-    private long expiration;
+    private final JwtConfig jwtConfig;
 
     private final SecretKey secret;
 
-    public JwtUtil(@Value("${jwt.secret}") String secretString) {
-        this.secret = Keys.hmacShaKeyFor(secretString.getBytes(StandardCharsets.UTF_8));
+    public JwtUtil(JwtConfig jwtConfig) {
+        this.jwtConfig = jwtConfig;
+        this.secret = Keys.hmacShaKeyFor(jwtConfig.secret().getBytes(StandardCharsets.UTF_8));
     }
 
-    public String generateToken(String username) {
+    public String generateToken(String username, long expirationMillis, TokenType tokenType) {
         return Jwts.builder()
                 .subject(username)
+                .claim("token_type", tokenType.name())
                 .issuedAt(new Date(System.currentTimeMillis()))
-                .expiration(new Date(System.currentTimeMillis() + expiration))
+                .expiration(new Date(System.currentTimeMillis() + expirationMillis))
                 .signWith(secret)
                 .compact();
+    }
+
+    public String generateAccessToken(String username) {
+        return generateToken(username, jwtConfig.expiration(), TokenType.ACCESS);
     }
 
     public boolean isValidToken(String token) {
@@ -47,6 +52,14 @@ public class JwtUtil {
 
     public String getUsername(String token) {
         return getClaimFromToken(token, Claims::getSubject);
+    }
+
+    public TokenType getTokenType(String token) {
+        String typeString = getClaimFromToken(token, claims -> claims.get("token_type", String.class));
+        if (typeString == null) {
+            throw new JwtException("Token type claim is missing");
+        }
+        return TokenType.valueOf(typeString);
     }
 
     private <T> T getClaimFromToken(String token, Function<Claims, T> claimsResolver) {
