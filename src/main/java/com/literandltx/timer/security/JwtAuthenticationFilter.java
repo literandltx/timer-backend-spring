@@ -1,5 +1,6 @@
 package com.literandltx.timer.security;
 
+import com.literandltx.timer.exception.custom.InvalidTokenTypeException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -30,6 +31,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String token = getToken(request);
 
         if (token != null && jwtUtil.isValidToken(token)) {
+            if (jwtUtil.getTokenType(token) != TokenType.ACCESS) {
+                throw new InvalidTokenTypeException("Provided token is not an access token.");
+            }
+
             String username = jwtUtil.getUsername(token);
             UserDetails userDetails = userDetailsService.loadUserByUsername(username);
             Authentication authentication =
