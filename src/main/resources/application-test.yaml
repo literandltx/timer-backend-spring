@@ -18,3 +18,10 @@ web:
   cookie:
     secure: false
     same-site: Lax
+
+app:
+  rate-limit:
+    cache-max-size: 10000
+    cache-expire: 5m
+    bucket-capacity: 100
+    refill-interval: 1m
