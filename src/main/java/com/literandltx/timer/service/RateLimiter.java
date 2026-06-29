@@ -1,5 +1,8 @@
 package com.literandltx.timer.service;
 
+import org.springframework.stereotype.Service;
+
+@Service
 public interface RateLimiter {
 
     /**
