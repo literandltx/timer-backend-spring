@@ -123,8 +123,8 @@ public class TimerOptionControllerIT extends BaseIntegrationTest {
                 .statusCode(HttpStatus.CREATED.value())
                 .body("uuid", notNullValue())
                 .body("value", equalTo(optionValue.intValue()))
-                .body("createdAt", equalTo(now.toString()))
-                .body("updatedAt", equalTo(now.toString()))
+                .body("createdAt", equalTo(now.format(FORMATTER)))
+                .body("updatedAt", equalTo(now.format(FORMATTER)))
                 .body("deleted", equalTo(false));
     }
 
@@ -200,7 +200,7 @@ public class TimerOptionControllerIT extends BaseIntegrationTest {
         timerOptionRepository.saveAll(List.of(oldOption, newOption));
 
         // 2. Act
-        String isoDate = LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME);
+        String isoDate = LocalDateTime.now().format(FORMATTER);
         Response response = given()
                 .contentType(ContentType.JSON)
                 .header("Authorization", "Bearer " + authToken)

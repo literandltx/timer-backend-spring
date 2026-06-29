@@ -36,6 +36,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 public class LabelControllerIT extends BaseIntegrationTest {
 
+    private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
+
     @Autowired
     private UserRepository userRepository;
 
@@ -124,8 +126,8 @@ public class LabelControllerIT extends BaseIntegrationTest {
                 .body("uuid", notNullValue())
                 .body("name", equalTo(labelName))
                 .body("color", equalTo(labelColor))
-                .body("createdAt", equalTo(now.toString()))
-                .body("updatedAt", equalTo(now.toString()))
+                .body("createdAt", equalTo(now.format(FORMATTER)))
+                .body("updatedAt", equalTo(now.format(FORMATTER)))
                 .body("deleted", equalTo(false));
     }
 
@@ -208,7 +210,7 @@ public class LabelControllerIT extends BaseIntegrationTest {
         labelRepository.saveAll(List.of(oldLabel, newLabel));
 
         // 2. Act
-        String isoDate = LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME);
+        String isoDate = LocalDateTime.now().format(FORMATTER);
         Response response = given()
                 .contentType(ContentType.JSON)
                 .header("Authorization", "Bearer " + authToken)
@@ -268,8 +270,8 @@ public class LabelControllerIT extends BaseIntegrationTest {
                 .body("uuid", notNullValue())
                 .body("name", equalTo(updatedLabelName))
                 .body("color", equalTo(updatedLabelColor))
-                .body("createdAt", equalTo(now.toString()))
-                .body("updatedAt", equalTo(future.toString()))
+                .body("createdAt", equalTo(now.format(FORMATTER)))
+                .body("updatedAt", equalTo(future.format(FORMATTER)))
                 .body("deleted", equalTo(false));
     }
 
