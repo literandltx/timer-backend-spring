@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/v1/sync")
 public class SyncController {
 
-    private SyncService syncService;
+    private final SyncService syncService;
 
     @PostMapping("/queue")
     public ResponseEntity<SyncQueueBulkResponse> processQueue(
