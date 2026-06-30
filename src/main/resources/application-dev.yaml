@@ -27,5 +27,5 @@ app:
   rate-limit:
     cache-max-size: 10000
     cache-expire: 5m
-    bucket-capacity: 20
+    bucket-capacity: 50
     refill-interval: 1m

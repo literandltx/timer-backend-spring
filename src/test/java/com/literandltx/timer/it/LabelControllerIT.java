@@ -1,4 +1,4 @@
-package com.literandltx.timer;
+package com.literandltx.timer.it;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.equalTo;
@@ -8,15 +8,15 @@ import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.literandltx.timer.dto.option.TimerOptionCreateRequestDto;
-import com.literandltx.timer.dto.option.TimerOptionUpdateRequestDto;
+import com.literandltx.timer.dto.label.LabelCreateRequestDto;
+import com.literandltx.timer.dto.label.LabelUpdateRequestDto;
 import com.literandltx.timer.dto.user.UserLoginRequestDto;
+import com.literandltx.timer.model.Label;
 import com.literandltx.timer.model.Role;
 import com.literandltx.timer.model.RoleName;
-import com.literandltx.timer.model.TimerOption;
 import com.literandltx.timer.model.User;
+import com.literandltx.timer.repository.LabelRepository;
 import com.literandltx.timer.repository.RoleRepository;
-import com.literandltx.timer.repository.TimerOptionRepository;
 import com.literandltx.timer.repository.UserRepository;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
@@ -34,7 +34,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-public class TimerOptionControllerIT extends BaseIntegrationTest {
+public class LabelControllerIT extends BaseIntegrationTest {
 
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
 
@@ -42,7 +42,7 @@ public class TimerOptionControllerIT extends BaseIntegrationTest {
     private UserRepository userRepository;
 
     @Autowired
-    private TimerOptionRepository timerOptionRepository;
+    private LabelRepository labelRepository;
 
     @Autowired
     private RoleRepository roleRepository;
@@ -90,21 +90,23 @@ public class TimerOptionControllerIT extends BaseIntegrationTest {
     @AfterEach
     void tearDown() {
         super.tearDown();
-        jdbcTemplate.execute("DELETE FROM timer_options");
+        jdbcTemplate.execute("DELETE FROM labels");
         jdbcTemplate.execute("DELETE FROM users_roles");
         jdbcTemplate.execute("DELETE FROM refresh_tokens");
         jdbcTemplate.execute("DELETE FROM users");
     }
 
     @Test
-    void shouldCreateTimerOption_WhenUserIsAuthenticated() {
+    void shouldCreateLabel_WhenUserIsAuthenticated() {
         // 1. Arrange
         LocalDateTime now = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
-        Long optionValue = 25L;
+        String labelName = "Label 1";
+        String labelColor = "#FF5733";
 
-        TimerOptionCreateRequestDto request = TimerOptionCreateRequestDto.builder()
+        LabelCreateRequestDto request = LabelCreateRequestDto.builder()
                 .uuid(UUID.randomUUID())
-                .value(optionValue)
+                .name(labelName)
+                .color(labelColor)
                 .createdAt(now)
                 .updatedAt(now)
                 .build();
@@ -115,89 +117,97 @@ public class TimerOptionControllerIT extends BaseIntegrationTest {
                 .header("Authorization", "Bearer " + authToken)
                 .body(request)
                 .when()
-                .post("/api/v1/timer-options");
+                .post("/api/v1/labels");
 
         // 3. Assert
         response.then()
                 .log().ifValidationFails()
                 .statusCode(HttpStatus.CREATED.value())
                 .body("uuid", notNullValue())
-                .body("value", equalTo(optionValue.intValue()))
+                .body("name", equalTo(labelName))
+                .body("color", equalTo(labelColor))
                 .body("createdAt", equalTo(now.format(FORMATTER)))
                 .body("updatedAt", equalTo(now.format(FORMATTER)))
                 .body("deleted", equalTo(false));
     }
 
     @Test
-    void shouldReturnAllActiveTimerOptions_WhenNoUpdatedAfterIsProvided() {
+    void shouldReturnAllActiveLabels_WhenNoUpdatedAfterIsProvided() {
         // 1. Arrange
-        Long value1 = 15L;
-        Long value2 = 45L;
+        String labelName1 = "Label 1";
+        String labelName2 = "Label 2";
+        String labelColor1 = "#FF0000";
+        String labelColor2 = "#FFFF00";
         LocalDateTime now = LocalDateTime.now();
 
-        TimerOption option1 = TimerOption.builder()
+        Label label1 = Label.builder()
                 .uuid(UUID.randomUUID())
-                .value(value1)
+                .name(labelName1)
+                .color(labelColor1)
                 .user(testUser)
                 .createdAt(now)
                 .updatedAt(now)
                 .isDeleted(false)
                 .build();
 
-        TimerOption option2 = TimerOption.builder()
+        Label label2 = Label.builder()
                 .uuid(UUID.randomUUID())
-                .value(value2)
+                .name(labelName2)
+                .color(labelColor2)
                 .user(testUser)
                 .createdAt(now.plusHours(1))
                 .updatedAt(now.plusHours(1))
                 .isDeleted(true)
                 .build();
 
-        timerOptionRepository.saveAll(List.of(option1, option2));
+        labelRepository.saveAll(List.of(label1, label2));
 
         // 2. Act
         Response response = given()
                 .contentType(ContentType.JSON)
                 .header("Authorization", "Bearer " + authToken)
                 .when()
-                .get("/api/v1/timer-options");
+                .get("/api/v1/labels");
 
         // 3. Assert
         response.then()
                 .log().ifValidationFails()
                 .statusCode(HttpStatus.OK.value())
                 .body("$", hasSize(1))
-                .body("value", hasItem(value1.intValue()))
-                .body("value", not(hasItem(value2.intValue())));
+                .body("name", hasItem(labelName1))
+                .body("name", not(hasItem(labelName2)));
     }
 
     @Test
     void shouldReturnDeltaUpdates_WhenUpdatedAfterIsProvided() {
         // 1. Arrange
-        Long oldValue = 10L;
-        Long newValue = 60L;
-        LocalDateTime past = LocalDateTime.now().minusDays(5);
-        LocalDateTime future = LocalDateTime.now().plusDays(5);
+        String labelName1 = "Label 1";
+        String labelName2 = "Label 2";
+        String labelColor1 = "#FF0000";
+        String labelColor2 = "#FFFF00";
+        LocalDateTime past = LocalDateTime.now().minusDays(1);
 
-        TimerOption newOption = TimerOption.builder()
+        Label newLabel = Label.builder()
                 .uuid(UUID.randomUUID())
-                .value(newValue)
-                .user(testUser)
-                .createdAt(past)
-                .updatedAt(future)
-                .isDeleted(false)
-                .build();
-
-        TimerOption oldOption = TimerOption.builder()
-                .uuid(UUID.randomUUID())
-                .value(oldValue)
+                .name(labelName1)
+                .color(labelColor1)
                 .user(testUser)
                 .createdAt(past)
                 .updatedAt(past)
                 .isDeleted(false)
                 .build();
 
-        timerOptionRepository.saveAll(List.of(oldOption, newOption));
+        Label oldLabel = Label.builder()
+                .uuid(UUID.randomUUID())
+                .name(labelName2)
+                .color(labelColor2)
+                .user(testUser)
+                .createdAt(past)
+                .updatedAt(past.plusDays(2))
+                .isDeleted(false)
+                .build();
+
+        labelRepository.saveAll(List.of(oldLabel, newLabel));
 
         // 2. Act
         String isoDate = LocalDateTime.now().format(FORMATTER);
@@ -206,38 +216,42 @@ public class TimerOptionControllerIT extends BaseIntegrationTest {
                 .header("Authorization", "Bearer " + authToken)
                 .queryParam("updatedAfter", isoDate)
                 .when()
-                .get("/api/v1/timer-options");
+                .get("/api/v1/labels");
 
         // 3. Assert
         response.then()
                 .log().ifValidationFails()
                 .statusCode(HttpStatus.OK.value())
                 .body("$", hasSize(1))
-                .body("value", not(hasItem(oldValue.intValue())))
-                .body("value", hasItem(newValue.intValue()));
+                .body("name", not(hasItem(labelName1)))
+                .body("name", hasItem(labelName2));
     }
 
     @Test
-    void shouldUpdateTimerOption_WhenUserIsAuthenticated_AndOptionExists() {
+    void shouldUpdateLabel_WhenUserIsAuthenticated_AndLabelExists() {
         // 1. Arrange
-        Long originalValue = 25L;
-        Long updatedValue = 30L;
+        String labelName = "Label";
+        String labelColor = "#FF0000";
+        String updatedLabelName = "Updated Label";
+        String updatedLabelColor = "#FFFF00";
         LocalDateTime now = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
-        LocalDateTime future = LocalDateTime.now().plusHours(1).truncatedTo(ChronoUnit.SECONDS);
+        LocalDateTime future = now.plusHours(1);
 
-        TimerOption originalOption = TimerOption.builder()
+        Label originalLabel = Label.builder()
                 .uuid(UUID.randomUUID())
-                .value(originalValue)
+                .name(labelName)
+                .color(labelColor)
                 .user(testUser)
                 .createdAt(now)
                 .updatedAt(now)
                 .isDeleted(false)
                 .build();
 
-        TimerOption savedOption = timerOptionRepository.save(originalOption);
+        Label savedLabel = labelRepository.save(originalLabel);
 
-        TimerOptionUpdateRequestDto request = TimerOptionUpdateRequestDto.builder()
-                .value(updatedValue)
+        LabelUpdateRequestDto request = LabelUpdateRequestDto.builder()
+                .name(updatedLabelName)
+                .color(updatedLabelColor)
                 .updatedAt(future)
                 .build();
 
@@ -247,24 +261,27 @@ public class TimerOptionControllerIT extends BaseIntegrationTest {
                 .header("Authorization", "Bearer " + authToken)
                 .body(request)
                 .when()
-                .put("/api/v1/timer-options/{id}", savedOption.getUuid());
+                .put("/api/v1/labels/{id}", savedLabel.getUuid());
 
         // 3. Assert
         response.then()
                 .log().ifValidationFails()
                 .statusCode(HttpStatus.OK.value())
                 .body("uuid", notNullValue())
-                .body("value", equalTo(updatedValue.intValue()))
+                .body("name", equalTo(updatedLabelName))
+                .body("color", equalTo(updatedLabelColor))
                 .body("createdAt", equalTo(now.format(FORMATTER)))
                 .body("updatedAt", equalTo(future.format(FORMATTER)))
                 .body("deleted", equalTo(false));
     }
 
     @Test
-    void shouldReturnForbidden_WhenUpdatingTimerOptionBelongingToAnotherUser() {
+    void shouldReturnForbidden_WhenUpdatingLabelBelongingToAnotherUser() {
         // 1. Arrange
-        Long victimValue = 120L;
-        Long adversaryValue = 5L;
+        String victimLabelName = "Label";
+        String victimLabelColor = "#FF0000";
+        String adversaryLabelName = "Adversary Label";
+        String adversaryLabelColor = "#FFFF00";
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime future = LocalDateTime.now().plusHours(1);
 
@@ -274,18 +291,20 @@ public class TimerOptionControllerIT extends BaseIntegrationTest {
                 .build();
         userRepository.save(victimUser);
 
-        TimerOption victimOption = TimerOption.builder()
+        Label victimLabel = Label.builder()
                 .uuid(UUID.randomUUID())
-                .value(victimValue)
+                .name(victimLabelName)
+                .color(victimLabelColor)
                 .user(victimUser)
                 .createdAt(now)
                 .updatedAt(now)
                 .isDeleted(false)
                 .build();
-        TimerOption savedVictimOption = timerOptionRepository.save(victimOption);
+        Label savedVictimLabel = labelRepository.save(victimLabel);
 
-        TimerOptionUpdateRequestDto request = TimerOptionUpdateRequestDto.builder()
-                .value(adversaryValue)
+        LabelUpdateRequestDto request = LabelUpdateRequestDto.builder()
+                .name(adversaryLabelName)
+                .color(adversaryLabelColor)
                 .updatedAt(future)
                 .build();
 
@@ -295,7 +314,7 @@ public class TimerOptionControllerIT extends BaseIntegrationTest {
                 .header("Authorization", "Bearer " + authToken)
                 .body(request)
                 .when()
-                .put("/api/v1/timer-options/{id}", savedVictimOption.getUuid());
+                .put("/api/v1/labels/{id}", savedVictimLabel.getUuid());
 
         // 3. Assert
         response.then()
@@ -304,38 +323,39 @@ public class TimerOptionControllerIT extends BaseIntegrationTest {
     }
 
     @Test
-    void shouldSoftDeleteTimerOption_WhenUserIsAuthenticated_AndOwnsOption() {
+    void shouldSoftDeleteLabel_WhenUserIsAuthenticated_AndOwnsLabel() {
         // 1. Arrange
         LocalDateTime now = LocalDateTime.now();
 
-        TimerOption option = TimerOption.builder()
+        Label label = Label.builder()
                 .uuid(UUID.randomUUID())
-                .value(90L)
+                .name("To Be Deleted")
+                .color("#000000")
                 .user(testUser)
                 .createdAt(now)
                 .updatedAt(now)
                 .isDeleted(false)
                 .build();
-        TimerOption savedOption = timerOptionRepository.save(option);
+        Label savedLabel = labelRepository.save(label);
 
         // 2. Act
         Response response = given()
                 .contentType(ContentType.JSON)
                 .header("Authorization", "Bearer " + authToken)
                 .when()
-                .delete("/api/v1/timer-options/{id}", savedOption.getUuid());
+                .delete("/api/v1/labels/{id}", savedLabel.getUuid());
 
         // 3. Assert
         response.then()
                 .log().ifValidationFails()
                 .statusCode(HttpStatus.NO_CONTENT.value());
 
-        TimerOption fetchedOption = timerOptionRepository.findById(savedOption.getUuid()).orElseThrow();
-        assertTrue(fetchedOption.isDeleted(), "Timer option should be marked as deleted");
+        Label fetchedLabel = labelRepository.findById(savedLabel.getUuid()).orElseThrow();
+        assertTrue(fetchedLabel.isDeleted(), "Label should be marked as deleted");
     }
 
     @Test
-    void shouldReturnNotFound_WhenDeletingNonExistentTimerOption() {
+    void shouldReturnNotFound_WhenDeletingNonExistentLabel() {
         // 1. Arrange
         UUID nonExistentId = UUID.randomUUID();
 
@@ -344,7 +364,7 @@ public class TimerOptionControllerIT extends BaseIntegrationTest {
                 .contentType(ContentType.JSON)
                 .header("Authorization", "Bearer " + authToken)
                 .when()
-                .delete("/api/v1/timer-options/{id}", nonExistentId);
+                .delete("/api/v1/labels/{id}", nonExistentId);
 
         // 3. Assert
         response.then()

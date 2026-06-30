@@ -1,4 +1,4 @@
-package com.literandltx.timer;
+package com.literandltx.timer.it;
 
 import io.restassured.RestAssured;
 import org.junit.jupiter.api.AfterEach;
