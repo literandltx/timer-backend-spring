@@ -232,7 +232,7 @@ public class TimerEntryControllerIT extends BaseIntegrationTest {
         timerEntryRepository.saveAll(List.of(oldEntry, newEntry));
 
         // 2. Act
-        String isoDate = LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME);
+        String isoDate = LocalDateTime.now().format(FORMATTER);
         Response response = given()
                 .contentType(ContentType.JSON)
                 .header("Authorization", "Bearer " + authToken)

@@ -22,3 +22,10 @@ web:
   cookie:
     secure: true
     same-site: None
+
+app:
+  rate-limit:
+    cache-max-size: 10000
+    cache-expire: 5m
+    bucket-capacity: 20
+    refill-interval: 1m

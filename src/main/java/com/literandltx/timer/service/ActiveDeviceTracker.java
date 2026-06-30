@@ -3,7 +3,9 @@ package com.literandltx.timer.service;
 import com.literandltx.timer.dto.actuator.AdminDevicesResponse;
 import com.literandltx.timer.dto.actuator.UserPingResponse;
 import java.util.UUID;
+import org.springframework.stereotype.Service;
 
+@Service
 public interface ActiveDeviceTracker {
 
     /**

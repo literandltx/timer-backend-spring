@@ -32,6 +32,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 public class TimerSettingControllerIT extends BaseIntegrationTest {
 
+    private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
+
     @Autowired
     private UserRepository userRepository;
 
@@ -228,7 +230,7 @@ public class TimerSettingControllerIT extends BaseIntegrationTest {
                 .build();
         timerSettingRepository.save(setting);
 
-        String isoDate = pastQueryDate.format(DateTimeFormatter.ISO_DATE_TIME);
+        String isoDate = pastQueryDate.format(FORMATTER);
 
         // 2. Act
         Response response = given()
@@ -260,7 +262,7 @@ public class TimerSettingControllerIT extends BaseIntegrationTest {
                 .build();
         timerSettingRepository.save(setting);
 
-        String isoDate = futureQueryDate.format(DateTimeFormatter.ISO_DATE_TIME);
+        String isoDate = futureQueryDate.format(FORMATTER);
 
         // 2. Act
         Response response = given()
