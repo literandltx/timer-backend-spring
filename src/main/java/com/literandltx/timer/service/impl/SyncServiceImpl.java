@@ -41,12 +41,19 @@ public class SyncServiceImpl implements SyncService {
         List<Long> successfulIds = new ArrayList<>();
         List<SyncQueueBulkResponse.FailedSyncAction> failedActions = new ArrayList<>();
 
-        if (request == null || request.getActions() == null) {
+        if (request == null || request.getActions() == null || request.getActions().isEmpty()) {
+            log.debug("Received empty or null sync queue bulk request.");
             return response;
         }
 
+        int totalActions = request.getActions().size();
+        log.info("Starting sync queue processing. Total actions: {}", totalActions);
+
         for (SyncActionDto actionDto : request.getActions()) {
             try {
+                log.debug("Processing sync action: [{}] for entityType: [{}], entityId: [{}]",
+                        actionDto.getAction(), actionDto.getEntityType(), actionDto.getEntityId());
+
                 Object specificDto = null;
 
                 if (!"DELETE".equals(actionDto.getAction())) {
@@ -56,14 +63,21 @@ public class SyncServiceImpl implements SyncService {
 
                 processAction(actionDto, specificDto, user);
                 successfulIds.add(actionDto.getId());
+
+                log.debug("Successfully processed sync action for entityId: [{}]", actionDto.getEntityId());
             } catch (Exception e) {
-                log.error("Failed action for entityId {} of type {}", actionDto.getEntityId(), actionDto.getEntityType(), e);
+                log.error("Failed action for entityId [{}] of type [{}]. Error: {}",
+                        actionDto.getEntityId(), actionDto.getEntityType(), e.getMessage(), e);
+
                 failedActions.add(new SyncQueueBulkResponse.FailedSyncAction(
                         actionDto.getId(),
                         e.getMessage()
                 ));
             }
         }
+
+        log.info("Finished sync queue processing. Successes: {}/{}, Failures: {}/{}",
+                successfulIds.size(), totalActions, failedActions.size(), totalActions);
 
         response.setSuccessfulIds(successfulIds);
         response.setFailedActions(failedActions);
