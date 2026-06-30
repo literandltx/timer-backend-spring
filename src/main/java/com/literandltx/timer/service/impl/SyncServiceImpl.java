@@ -9,6 +9,7 @@ import com.literandltx.timer.dto.option.TimerOptionUpdateRequestDto;
 import com.literandltx.timer.dto.settings.TimerSettingRequestDto;
 import com.literandltx.timer.dto.sync.SyncActionDto;
 import com.literandltx.timer.dto.sync.SyncQueueBulkRequest;
+import com.literandltx.timer.dto.sync.SyncQueueBulkResponse;
 import com.literandltx.timer.mapper.SyncPayloadMapper;
 import com.literandltx.timer.model.User;
 import com.literandltx.timer.service.LabelService;
@@ -16,12 +17,12 @@ import com.literandltx.timer.service.SyncService;
 import com.literandltx.timer.service.TimerEntryService;
 import com.literandltx.timer.service.TimerOptionService;
 import com.literandltx.timer.service.TimerSettingService;
-import java.util.Optional;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Service
@@ -35,30 +36,38 @@ public class SyncServiceImpl implements SyncService {
     private final TimerSettingService timerSettingService;
 
     @Override
-    @Transactional
-    public boolean processQueue(SyncQueueBulkRequest request, User user) {
+    public SyncQueueBulkResponse processQueue(SyncQueueBulkRequest request, User user) {
+        SyncQueueBulkResponse response = new SyncQueueBulkResponse();
+        List<Long> successfulIds = new ArrayList<>();
+        List<SyncQueueBulkResponse.FailedSyncAction> failedActions = new ArrayList<>();
+
         if (request == null || request.getActions() == null) {
-            return false;
+            return response;
         }
 
         for (SyncActionDto actionDto : request.getActions()) {
             try {
-                Optional<Object> specificDtoOpt = payloadMapper.extractPayload(actionDto);
-                Object specificDto = specificDtoOpt.orElseThrow(() -> {
-                    log.error("Failed to parse sync dto. Payload mapped to empty for entityId {} of type {}",
-                            actionDto.getEntityId(), actionDto.getEntityType());
-                    return new RuntimeException("Failed mapped sync payload.");
-                });
+                Object specificDto = null;
+
+                if (!"DELETE".equals(actionDto.getAction())) {
+                    specificDto = payloadMapper.extractPayload(actionDto)
+                            .orElseThrow(() -> new RuntimeException("Failed to map sync payload."));
+                }
 
                 processAction(actionDto, specificDto, user);
+                successfulIds.add(actionDto.getId());
             } catch (Exception e) {
-                log.error("Failed to process sync action for entityId {} of type {}",
-                        actionDto.getEntityId(), actionDto.getEntityType(), e);
-                throw new RuntimeException("Sync processing failed", e);
+                log.error("Failed action for entityId {} of type {}", actionDto.getEntityId(), actionDto.getEntityType(), e);
+                failedActions.add(new SyncQueueBulkResponse.FailedSyncAction(
+                        actionDto.getId(),
+                        e.getMessage()
+                ));
             }
         }
 
-        return true;
+        response.setSuccessfulIds(successfulIds);
+        response.setFailedActions(failedActions);
+        return response;
     }
 
     private void processAction(SyncActionDto actionDto, Object payload, User user) {

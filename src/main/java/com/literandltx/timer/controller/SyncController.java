@@ -1,6 +1,7 @@
 package com.literandltx.timer.controller;
 
 import com.literandltx.timer.dto.sync.SyncQueueBulkRequest;
+import com.literandltx.timer.dto.sync.SyncQueueBulkResponse;
 import com.literandltx.timer.model.User;
 import com.literandltx.timer.service.SyncService;
 import lombok.RequiredArgsConstructor;
@@ -19,13 +20,14 @@ public class SyncController {
     private SyncService syncService;
 
     @PostMapping("/queue")
-    public ResponseEntity<Void> processQueue(
+    public ResponseEntity<SyncQueueBulkResponse> processQueue(
             @AuthenticationPrincipal User user,
             @RequestBody SyncQueueBulkRequest request
     ) {
-        syncService.processQueue(request, user);
-
-        return ResponseEntity.accepted().build();
+        SyncQueueBulkResponse response = syncService.processQueue(request, user);
+        return ResponseEntity
+                .accepted()
+                .body(response);
     }
 
 }
