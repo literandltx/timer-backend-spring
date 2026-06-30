@@ -21,7 +21,7 @@ import org.hibernate.annotations.SQLRestriction;
 @Getter
 @Setter
 @Accessors(chain = true)
-@SQLDelete(sql = "UPDATE users SET is_deleted=true WHERE id=?")
+@SQLDelete(sql = "UPDATE roles SET is_deleted=true WHERE id=?")
 @SQLRestriction("is_deleted=false")
 @Table(name = "roles")
 @NoArgsConstructor

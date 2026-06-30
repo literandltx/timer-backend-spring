@@ -23,3 +23,13 @@ management:
     health:
       show-details: when_authorized
       roles: ADMIN
+
+app:
+  init:
+    admin-email: "admin_default@timer.com"
+    default-admin-password: ${APP_ADMIN_PASSWORD:DefaultSecureAdminPassword123!}
+  rate-limit:
+    cache-max-size: 1000
+    cache-expire: 5m
+    bucket-capacity: 20
+    refill-interval: 1m

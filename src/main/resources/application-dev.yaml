@@ -24,6 +24,9 @@ web:
     same-site: None
 
 app:
+  init:
+    admin-email: "admin_dev@timer.com"
+    default-admin-password: ${APP_ADMIN_PASSWORD:DefaultSecureAdminPassword123!}
   rate-limit:
     cache-max-size: 10000
     cache-expire: 5m

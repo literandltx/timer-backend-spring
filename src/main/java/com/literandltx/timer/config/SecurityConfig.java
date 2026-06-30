@@ -62,6 +62,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(AUTH_WHITE_LIST).permitAll()
                         .requestMatchers("/api/v1/system/ping/admin").hasRole("ADMIN")
+                        .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated())
                 .httpBasic(withDefaults())
                 .sessionManagement(session ->
@@ -92,4 +93,5 @@ public class SecurityConfig {
 
         return source;
     }
+
 }

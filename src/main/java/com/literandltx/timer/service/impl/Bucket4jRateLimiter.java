@@ -2,7 +2,7 @@ package com.literandltx.timer.service.impl;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
-import com.literandltx.timer.config.env.RateLimitProperties;
+import com.literandltx.timer.config.env.AppProperties;
 import com.literandltx.timer.service.RateLimiter;
 import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
@@ -12,13 +12,13 @@ import org.springframework.stereotype.Service;
 public class Bucket4jRateLimiter implements RateLimiter {
 
     private final Cache<String, Bucket> cache;
-    private final RateLimitProperties properties;
+    private final AppProperties properties;
 
-    public Bucket4jRateLimiter(RateLimitProperties properties) {
+    public Bucket4jRateLimiter(AppProperties properties) {
         this.properties = properties;
         this.cache = Caffeine.newBuilder()
-                .maximumSize(properties.cacheMaxSize())
-                .expireAfterAccess(properties.cacheExpire())
+                .maximumSize(properties.rateLimit().cacheMaxSize())
+                .expireAfterAccess(properties.rateLimit().cacheExpire())
                 .build();
     }
 
@@ -29,8 +29,8 @@ public class Bucket4jRateLimiter implements RateLimiter {
 
     private Bucket createNewBucket(String ipAddress) {
         Bandwidth limit = Bandwidth.builder()
-                .capacity(properties.bucketCapacity())
-                .refillIntervally(properties.bucketCapacity(), properties.refillInterval())
+                .capacity(properties.rateLimit().bucketCapacity())
+                .refillIntervally(properties.rateLimit().bucketCapacity(), properties.rateLimit().refillInterval())
                 .build();
 
         return Bucket.builder()
