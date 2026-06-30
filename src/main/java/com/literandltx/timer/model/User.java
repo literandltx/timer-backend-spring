@@ -59,6 +59,10 @@ public class User implements UserDetails {
     @Column(name = "is_deleted", nullable = false)
     private boolean isDeleted = false;
 
+    @Builder.Default
+    @Column(name = "is_enabled", nullable = false)
+    private boolean isEnabled = true;
+
     @OneToOne(mappedBy = "user", cascade = CascadeType.REMOVE)
     private TimerSetting timerSetting;
 
@@ -108,7 +112,7 @@ public class User implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return true;
+        return isEnabled;
     }
 
 }
