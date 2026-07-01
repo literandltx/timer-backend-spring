@@ -29,7 +29,6 @@ public class DataInitializer implements CommandLineRunner {
     public void run(String... args) {
         log.info("Starting data initialization...");
 
-        initializeRoles();
         initializeAdminUser();
 
         log.info("Data initialization completed.");
