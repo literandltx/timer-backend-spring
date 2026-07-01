@@ -1,0 +1,58 @@
+databaseChangeLog:
+  - changeSet:
+      id: 07-create-timer-entries-table
+      author: literandltx
+      changes:
+        - createTable:
+            tableName: timer_entries
+            columns:
+              - column:
+                  name: uuid
+                  type: UUID
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: duration_seconds
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: start_time
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: is_deleted
+                  type: BOOLEAN
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: label_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_timer_entries_label_id
+                    references: labels(uuid)
+              - column:
+                  name: user_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_timer_entries_user_id
+                    references: users(id)
+        - addUniqueConstraint:
+            tableName: timer_entries
+            columnNames: user_id, start_time
+            constraintName: uc_timerentry_user_starttime

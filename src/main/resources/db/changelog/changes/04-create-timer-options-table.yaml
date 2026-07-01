@@ -1,0 +1,46 @@
+databaseChangeLog:
+  - changeSet:
+      id: 04-create-timer-options-table
+      author: literandltx
+      changes:
+        - createTable:
+            tableName: timer_options
+            columns:
+              - column:
+                  name: uuid
+                  type: UUID
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: timer_value
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: is_deleted
+                  type: BOOLEAN
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: user_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_timer_options_user_id
+                    references: users(id)
+        - addUniqueConstraint:
+            tableName: timer_options
+            columnNames: user_id, timer_value
+            constraintName: uc_timer_options_user_value
