@@ -2,6 +2,7 @@ package com.literandltx.timer.config;
 
 import com.literandltx.timer.config.env.WebPropertiesConfig;
 import com.literandltx.timer.security.JwtUtil;
+import com.literandltx.timer.security.SecurityConstants;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.NonNull;
 import org.springframework.context.annotation.Configuration;
@@ -14,6 +15,8 @@ import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.ChannelInterceptor;
 import org.springframework.messaging.support.MessageHeaderAccessor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
@@ -24,6 +27,7 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 public class StompConfig implements WebSocketMessageBrokerConfigurer {
 
     private final JwtUtil jwtUtil;
+    private final UserDetailsService userDetailsService;
     private final WebPropertiesConfig webPropertiesConfig;
 
     @Override
@@ -54,16 +58,17 @@ public class StompConfig implements WebSocketMessageBrokerConfigurer {
                     }
 
                     // JWT validation
-                    String authHeader = accessor.getFirstNativeHeader("Authorization");
+                    String authHeader = accessor.getFirstNativeHeader(SecurityConstants.AUTHORIZATION_HEADER);
 
-                    if (authHeader != null && authHeader.startsWith("Bearer ")) {
-                        String token = authHeader.substring(7);
+                    if (authHeader != null && authHeader.startsWith(SecurityConstants.BEARER_PREFIX)) {
+                        String token = authHeader.substring(SecurityConstants.BEARER_PREFIX_LENGTH);
 
                         if (jwtUtil.isValidToken(token)) {
                             String username = jwtUtil.getUsername(token);
 
+                            UserDetails userDetails = userDetailsService.loadUserByUsername(username);
                             UsernamePasswordAuthenticationToken authentication =
-                                    new UsernamePasswordAuthenticationToken(username, null, null);
+                                    new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
                             accessor.setUser(authentication);
                         } else {
                             throw new IllegalArgumentException("Invalid JWT Token");

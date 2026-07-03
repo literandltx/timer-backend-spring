@@ -8,6 +8,7 @@ import com.literandltx.timer.dto.user.UserLoginResponseDto;
 import com.literandltx.timer.dto.user.UserRegistrationRequestDto;
 import com.literandltx.timer.dto.user.UserRegistrationResponseDto;
 import com.literandltx.timer.security.AuthenticationService;
+import com.literandltx.timer.security.SecurityConstants;
 import com.literandltx.timer.service.UserService;
 import jakarta.validation.Valid;
 import java.time.Duration;
@@ -48,7 +49,7 @@ public class AuthenticationController {
     ) {
         AuthTokensDto tokens = authenticationService.login(request);
 
-        ResponseCookie cookie = ResponseCookie.from("REFRESH_TOKEN", tokens.refreshToken())
+        ResponseCookie cookie = ResponseCookie.from(SecurityConstants.REFRESH_TOKEN_COOKIE_NAME, tokens.refreshToken())
                 .httpOnly(true)
                 .secure(webPropertiesConfig.cookie().secure())
                 .path("/api/v1/auth")
@@ -63,7 +64,7 @@ public class AuthenticationController {
 
     @PostMapping("/refresh")
     public ResponseEntity<UserLoginResponseDto> refresh(
-            @CookieValue(name = "REFRESH_TOKEN") String refreshToken
+            @CookieValue(name = SecurityConstants.REFRESH_TOKEN_COOKIE_NAME) String refreshToken
     ) {
         UserLoginResponseDto response = authenticationService.refreshAccessToken(refreshToken);
         return ResponseEntity.ok(response);
@@ -71,11 +72,11 @@ public class AuthenticationController {
 
     @PostMapping("/logout")
     public ResponseEntity<Void> logout(
-            @CookieValue(name = "REFRESH_TOKEN", required = false) String refreshToken
+            @CookieValue(name = SecurityConstants.REFRESH_TOKEN_COOKIE_NAME, required = false) String refreshToken
     ) {
         authenticationService.logout(refreshToken);
 
-        ResponseCookie cookie = ResponseCookie.from("REFRESH_TOKEN", "")
+        ResponseCookie cookie = ResponseCookie.from(SecurityConstants.REFRESH_TOKEN_COOKIE_NAME, "")
                 .httpOnly(true)
                 .secure(webPropertiesConfig.cookie().secure())
                 .path("/api/v1/auth")
