@@ -53,7 +53,7 @@ public class AuthenticationController {
                 .secure(webPropertiesConfig.cookie().secure())
                 .path("/api/v1/auth")
                 .sameSite(webPropertiesConfig.cookie().sameSite())
-                .maxAge(Duration.ofMillis(jwtConfig.expiration()))
+                .maxAge(Duration.ofMillis(jwtConfig.refresh().expiration()))
                 .build();
 
         return ResponseEntity.ok()

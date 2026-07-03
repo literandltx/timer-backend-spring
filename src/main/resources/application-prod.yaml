@@ -1,11 +1,15 @@
-# Test Profile
+# Production Profile
 spring:
   config:
     activate:
-      on-profile: test
+      on-profile: dev
   datasource:
     driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://localhost:5432/postgres
+    username: postgres
+    password: password
   jpa:
+    show-sql: true
     hibernate:
       ddl-auto: validate
     properties:
@@ -18,16 +22,17 @@ web:
       - "http://localhost:3000"
       - "http://localhost:4200"
       - "http://localhost:5173"
+      - "https://literandltx.github.io"
   cookie:
-    secure: false
-    same-site: Lax
+    secure: true
+    same-site: None
 
 app:
   init:
-    admin-email: "admin_test@timer.com"
+    admin-email: "admin_prod@timer.com"
     default-admin-password: ${APP_ADMIN_PASSWORD:DefaultSecureAdminPassword123!}
   rate-limit:
     cache-max-size: 10000
     cache-expire: 5m
-    bucket-capacity: 1000
+    bucket-capacity: 50
     refill-interval: 1m
