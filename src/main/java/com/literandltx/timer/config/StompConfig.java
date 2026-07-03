@@ -35,7 +35,7 @@ public class StompConfig implements WebSocketMessageBrokerConfigurer {
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.addEndpoint("/ws-stomp")
-                .setAllowedOrigins(webPropertiesConfig.cors().allowedOrigins().toArray(String[]::new));
+                .setAllowedOriginPatterns(webPropertiesConfig.cors().allowedOrigins().toArray(String[]::new));
     }
 
     @Override
