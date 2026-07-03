@@ -2,6 +2,7 @@ package com.literandltx.timer.config;
 
 import com.literandltx.timer.config.env.WebPropertiesConfig;
 import com.literandltx.timer.security.JwtUtil;
+import com.literandltx.timer.security.SecurityConstants;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.NonNull;
 import org.springframework.context.annotation.Configuration;
@@ -57,10 +58,10 @@ public class StompConfig implements WebSocketMessageBrokerConfigurer {
                     }
 
                     // JWT validation
-                    String authHeader = accessor.getFirstNativeHeader("Authorization");
+                    String authHeader = accessor.getFirstNativeHeader(SecurityConstants.AUTHORIZATION_HEADER);
 
-                    if (authHeader != null && authHeader.startsWith("Bearer ")) {
-                        String token = authHeader.substring(7);
+                    if (authHeader != null && authHeader.startsWith(SecurityConstants.BEARER_PREFIX)) {
+                        String token = authHeader.substring(SecurityConstants.BEARER_PREFIX_LENGTH);
 
                         if (jwtUtil.isValidToken(token)) {
                             String username = jwtUtil.getUsername(token);
