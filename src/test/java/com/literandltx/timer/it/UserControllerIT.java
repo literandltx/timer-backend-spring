@@ -51,7 +51,7 @@ public class UserControllerIT extends BaseIntegrationTest {
     }
 
     @Test
-    void shouldSoftDeleteUser_WhenAuthorizedUserRequestsDeletion() {
+    void shouldHardDeleteUser_WhenAuthorizedUserRequestsDeletion() {
         // 1. Arrange
         Role userRole = roleRepository.findByName(RoleName.USER)
                 .orElseThrow(() -> new IllegalStateException("USER role not found"));
@@ -86,13 +86,13 @@ public class UserControllerIT extends BaseIntegrationTest {
                 .statusCode(HttpStatus.NO_CONTENT.value());
 
         // 3. Assert
-        Boolean isDeleted = jdbcTemplate.queryForObject(
-                "SELECT is_deleted FROM users WHERE email = ?",
-                Boolean.class,
+        Integer userCount = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM users WHERE email = ?",
+                Integer.class,
                 userEmail
         );
 
-        assertThat(isDeleted).isTrue();
+        assertThat(userCount).isEqualTo(0);
     }
 
     @Test
