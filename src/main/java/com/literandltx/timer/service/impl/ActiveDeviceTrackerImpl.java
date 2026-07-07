@@ -58,7 +58,7 @@ public class ActiveDeviceTrackerImpl implements ActiveDeviceTracker {
         }
 
         int activeCount = userDevices.size();
-        log.info("Active devices: {}, uuid: {}", activeCount, deviceUuid);
+        // log.info("Active devices: {}, uuid: {}", activeCount, deviceUuid);
         return new UserPingResponse(
                 SystemStatus.UP,
                 username,
