@@ -53,13 +53,13 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public void deleteUser(Long id) {
-        log.info("Attempting to delete user with id: {}", id);
+        log.info("Attempting to permanently delete user and all data for id: {}", id);
 
         User user = getUserOrThrow(id);
 
         userRepository.delete(user);
 
-        log.info("Successfully soft-deleted user with id: {}", id);
+        log.info("Successfully deleted user with id: {}", id);
     }
 
     private User getUserOrThrow(Long id) {
