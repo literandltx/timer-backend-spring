@@ -2,7 +2,7 @@
 spring:
   config:
     activate:
-      on-profile: dev
+      on-profile: prod
   datasource:
     driver-class-name: org.postgresql.Driver
     url: jdbc:postgresql://localhost:5432/postgres
@@ -15,6 +15,14 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
+
+logging:
+  level:
+    root: WARN
+    com.literandltx.timer: INFO
+  structured:
+    format:
+      console: ecs
 
 web:
   cors:
