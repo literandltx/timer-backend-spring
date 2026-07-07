@@ -20,9 +20,6 @@ logging:
   level:
     root: WARN
     com.literandltx.timer: INFO
-  structured:
-    format:
-      console: ecs
 
 web:
   cors:
