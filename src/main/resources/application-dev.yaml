@@ -16,6 +16,11 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
 
+logging:
+  level:
+    root: WARN
+    com.literandltx.timer: DEBUG
+
 web:
   cors:
     allowed-origins:
