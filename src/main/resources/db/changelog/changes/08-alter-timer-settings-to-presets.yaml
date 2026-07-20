@@ -1,0 +1,39 @@
+databaseChangeLog:
+  - changeSet:
+      id: 08-alter-timer-settings-to-presets
+      author: literandltx
+      changes:
+        - renameTable:
+            oldTableName: timer_settings
+            newTableName: timer_presets
+
+        - dropForeignKeyConstraint:
+            baseTableName: timer_presets
+            constraintName: fk_timer_settings_active_option_id
+
+        - renameColumn:
+            tableName: timer_presets
+            oldColumnName: active_option_id
+            newColumnName: timer_option_id
+            columnDataType: UUID
+
+        - addForeignKeyConstraint:
+            baseTableName: timer_presets
+            baseColumnNames: timer_option_id
+            constraintName: fk_timer_presets_timer_option_id
+            referencedTableName: timer_options
+            referencedColumnNames: uuid
+
+        - delete:
+            tableName: timer_presets
+
+        - addColumn:
+            tableName: timer_presets
+            columns:
+              - column:
+                  name: label_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_timer_presets_label_id
+                    references: labels(uuid)

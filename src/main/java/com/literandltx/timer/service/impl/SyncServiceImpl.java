@@ -6,7 +6,7 @@ import com.literandltx.timer.dto.label.LabelCreateRequestDto;
 import com.literandltx.timer.dto.label.LabelUpdateRequestDto;
 import com.literandltx.timer.dto.option.TimerOptionCreateRequestDto;
 import com.literandltx.timer.dto.option.TimerOptionUpdateRequestDto;
-import com.literandltx.timer.dto.settings.TimerSettingRequestDto;
+import com.literandltx.timer.dto.preset.TimerPresetRequestDto;
 import com.literandltx.timer.dto.sync.SyncActionDto;
 import com.literandltx.timer.dto.sync.SyncQueueBulkRequest;
 import com.literandltx.timer.dto.sync.SyncQueueBulkResponse;
@@ -16,7 +16,7 @@ import com.literandltx.timer.service.LabelService;
 import com.literandltx.timer.service.SyncService;
 import com.literandltx.timer.service.TimerEntryService;
 import com.literandltx.timer.service.TimerOptionService;
-import com.literandltx.timer.service.TimerSettingService;
+import com.literandltx.timer.service.TimerPresetService;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -33,7 +33,7 @@ public class SyncServiceImpl implements SyncService {
     private final LabelService labelService;
     private final TimerEntryService timerEntryService;
     private final TimerOptionService timerOptionService;
-    private final TimerSettingService timerSettingService;
+    private final TimerPresetService timerPresetService;
 
     @Override
     public SyncQueueBulkResponse processQueue(SyncQueueBulkRequest request, User user) {
@@ -116,7 +116,7 @@ public class SyncServiceImpl implements SyncService {
             }
             case "TIMER_SETTING" -> {
                 switch (action) {
-                    case "CREATE", "UPDATE" -> timerSettingService.upsert((TimerSettingRequestDto) payload, user);
+                    case "CREATE", "UPDATE" -> timerPresetService.upsert((TimerPresetRequestDto) payload, user);
                     default -> log.warn("Unsupported action {} for entity type TIMER_SETTING", action);
                 }
             }
