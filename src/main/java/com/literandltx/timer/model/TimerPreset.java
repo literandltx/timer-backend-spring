@@ -22,12 +22,16 @@ import lombok.experimental.SuperBuilder;
 @AllArgsConstructor
 @SuperBuilder
 @Entity
-@Table(name = "timer_settings")
-public class TimerSetting extends SyncEntity implements UserOwned {
+@Table(name = "timer_presets")
+public class TimerPreset extends SyncEntity implements UserOwned {
 
     @ManyToOne
-    @JoinColumn(name = "active_option_id", nullable = false)
-    private TimerOption preference;
+    @JoinColumn(name = "label_id", nullable = false)
+    private Label label;
+
+    @ManyToOne
+    @JoinColumn(name = "timer_option_id", nullable = false)
+    private TimerOption timerOption;
 
     @Column(name = "last_updated", nullable = false)
     private Long lastUpdated;

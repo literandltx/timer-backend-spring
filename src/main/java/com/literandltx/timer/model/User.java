@@ -60,7 +60,7 @@ public class User implements UserDetails {
     private boolean isEnabled = true;
 
     @OneToOne(mappedBy = "user", cascade = CascadeType.REMOVE)
-    private TimerSetting timerSetting;
+    private TimerPreset timerPreset;
 
     @Builder.Default
     @OneToMany(mappedBy = "user", cascade = CascadeType.REMOVE, orphanRemoval = true)

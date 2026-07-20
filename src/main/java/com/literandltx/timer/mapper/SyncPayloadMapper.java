@@ -6,7 +6,7 @@ import com.literandltx.timer.dto.label.LabelCreateRequestDto;
 import com.literandltx.timer.dto.label.LabelUpdateRequestDto;
 import com.literandltx.timer.dto.option.TimerOptionCreateRequestDto;
 import com.literandltx.timer.dto.option.TimerOptionUpdateRequestDto;
-import com.literandltx.timer.dto.settings.TimerSettingRequestDto;
+import com.literandltx.timer.dto.preset.TimerPresetRequestDto;
 import com.literandltx.timer.dto.sync.SyncActionDto;
 import java.util.Optional;
 import org.jspecify.annotations.NonNull;
@@ -51,7 +51,7 @@ public class SyncPayloadMapper {
                 default -> null;
             };
             case "TIMER_SETTING" -> switch (action) {
-                case "CREATE", "UPDATE" -> jsonMapper.convertValue(syncActionDto.getPayload(), TimerSettingRequestDto.class);
+                case "CREATE", "UPDATE" -> jsonMapper.convertValue(syncActionDto.getPayload(), TimerPresetRequestDto.class);
                 default -> null;
             };
             default -> throw new IllegalArgumentException("Unknown entity type: " + entityType);

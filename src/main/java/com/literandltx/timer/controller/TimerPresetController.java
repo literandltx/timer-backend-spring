@@ -1,9 +1,9 @@
 package com.literandltx.timer.controller;
 
-import com.literandltx.timer.dto.settings.TimerSettingRequestDto;
-import com.literandltx.timer.dto.settings.TimerSettingResponseDto;
+import com.literandltx.timer.dto.preset.TimerPresetRequestDto;
+import com.literandltx.timer.dto.preset.TimerPresetResponseDto;
 import com.literandltx.timer.model.User;
-import com.literandltx.timer.service.TimerSettingService;
+import com.literandltx.timer.service.TimerPresetService;
 import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -18,27 +18,27 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/v1/timer-settings")
+@RequestMapping("/api/v1/timer-presets")
 @RequiredArgsConstructor
-public class TimerSettingController {
+public class TimerPresetController {
 
-    private final TimerSettingService timerSettingService;
+    private final TimerPresetService timerPresetService;
 
     @PutMapping
-    public ResponseEntity<TimerSettingResponseDto> pushSettings(
-            @RequestBody TimerSettingRequestDto request,
+    public ResponseEntity<TimerPresetResponseDto> pushSettings(
+            @RequestBody TimerPresetRequestDto request,
             @AuthenticationPrincipal User user
     ) {
-        TimerSettingResponseDto response = timerSettingService.upsert(request, user);
+        TimerPresetResponseDto response = timerPresetService.upsert(request, user);
         return ResponseEntity.ok(response);
     }
 
     @GetMapping("/sync")
-    public ResponseEntity<TimerSettingResponseDto> pullSettings(
+    public ResponseEntity<TimerPresetResponseDto> pullSettings(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime updatedAfter,
             @AuthenticationPrincipal User user
     ) {
-        TimerSettingResponseDto response = timerSettingService.find(updatedAfter, user);
+        TimerPresetResponseDto response = timerPresetService.find(updatedAfter, user);
 
         if (response == null) {
             return ResponseEntity.status(HttpStatus.NO_CONTENT).build();

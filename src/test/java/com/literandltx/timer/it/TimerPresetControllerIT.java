@@ -4,16 +4,18 @@ import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.notNullValue;
 
-import com.literandltx.timer.dto.settings.TimerSettingRequestDto;
+import com.literandltx.timer.dto.preset.TimerPresetRequestDto;
 import com.literandltx.timer.dto.user.UserLoginRequestDto;
+import com.literandltx.timer.model.Label;
 import com.literandltx.timer.model.Role;
 import com.literandltx.timer.model.RoleName;
 import com.literandltx.timer.model.TimerOption;
-import com.literandltx.timer.model.TimerSetting;
+import com.literandltx.timer.model.TimerPreset;
 import com.literandltx.timer.model.User;
+import com.literandltx.timer.repository.LabelRepository;
 import com.literandltx.timer.repository.RoleRepository;
 import com.literandltx.timer.repository.TimerOptionRepository;
-import com.literandltx.timer.repository.TimerSettingRepository;
+import com.literandltx.timer.repository.TimerPresetRepository;
 import com.literandltx.timer.repository.UserRepository;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
@@ -30,7 +32,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-public class TimerSettingControllerIT extends BaseIntegrationTest {
+public class TimerPresetControllerIT extends BaseIntegrationTest {
 
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
 
@@ -38,10 +40,13 @@ public class TimerSettingControllerIT extends BaseIntegrationTest {
     private UserRepository userRepository;
 
     @Autowired
-    private TimerSettingRepository timerSettingRepository;
+    private TimerPresetRepository timerPresetRepository;
 
     @Autowired
     private TimerOptionRepository timerOptionRepository;
+
+    @Autowired
+    private LabelRepository labelRepository;
 
     @Autowired
     private RoleRepository roleRepository;
@@ -52,11 +57,12 @@ public class TimerSettingControllerIT extends BaseIntegrationTest {
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
-    private final String userEmail = "settings_test@example.com";
+    private final String userEmail = "preset_test@example.com";
     private final String userPlainPassword = "password";
     private String authToken;
     private User testUser;
     private TimerOption defaultOption;
+    private Label defaultLabel;
 
     @BeforeEach
     void setUpUser() {
@@ -82,6 +88,17 @@ public class TimerSettingControllerIT extends BaseIntegrationTest {
                 .build();
         defaultOption = timerOptionRepository.save(defaultOption);
 
+        defaultLabel = Label.builder()
+                .uuid(UUID.randomUUID())
+                .name("Test Label")
+                .color("#FFFFFF")
+                .user(testUser)
+                .createdAt(LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS))
+                .updatedAt(LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS))
+                .isDeleted(false)
+                .build();
+        defaultLabel = labelRepository.save(defaultLabel);
+
         UserLoginRequestDto loginRequest = new UserLoginRequestDto();
         loginRequest.setUsername(userEmail);
         loginRequest.setPassword(userPlainPassword);
@@ -100,21 +117,23 @@ public class TimerSettingControllerIT extends BaseIntegrationTest {
     @AfterEach
     void tearDown() {
         super.tearDown();
-        jdbcTemplate.execute("DELETE FROM timer_settings");
+        jdbcTemplate.execute("DELETE FROM timer_presets");
         jdbcTemplate.execute("DELETE FROM timer_options");
+        jdbcTemplate.execute("DELETE FROM labels");
         jdbcTemplate.execute("DELETE FROM users_roles");
         jdbcTemplate.execute("DELETE FROM refresh_tokens");
         jdbcTemplate.execute("DELETE FROM users");
     }
 
     @Test
-    void shouldCreateTimerSetting_WhenUpsertingAndNoneExists() {
+    void shouldCreateTimerPreset_WhenUpsertingAndNoneExists() {
         // 1. Arrange
         LocalDateTime now = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
-        UUID settingId = UUID.randomUUID();
+        UUID presetId = UUID.randomUUID();
 
-        TimerSettingRequestDto request = new TimerSettingRequestDto(
-                settingId,
+        TimerPresetRequestDto request = new TimerPresetRequestDto(
+                presetId,
+                defaultLabel.getUuid(),
                 defaultOption.getUuid(),
                 now,
                 now
@@ -126,7 +145,7 @@ public class TimerSettingControllerIT extends BaseIntegrationTest {
                 .header("Authorization", "Bearer " + authToken)
                 .body(request)
                 .when()
-                .put("/api/v1/timer-settings");
+                .put("/api/v1/timer-presets");
 
         // 3. Assert
         response.then()
@@ -136,22 +155,24 @@ public class TimerSettingControllerIT extends BaseIntegrationTest {
     }
 
     @Test
-    void shouldUpdateTimerSetting_WhenUpsertingAndSettingAlreadyExists() {
+    void shouldUpdateTimerPreset_WhenUpsertingAndPresetAlreadyExists() {
         // 1. Arrange
         LocalDateTime now = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
         LocalDateTime future = now.plusHours(1);
 
-        TimerSetting existingSetting = TimerSetting.builder()
+        TimerPreset existingPreset = TimerPreset.builder()
                 .uuid(UUID.randomUUID())
                 .user(testUser)
-                .preference(defaultOption)
+                .timerOption(defaultOption)
+                .label(defaultLabel)
                 .lastUpdated(System.currentTimeMillis())
                 .updatedAt(now)
                 .build();
-        timerSettingRepository.save(existingSetting);
+        timerPresetRepository.save(existingPreset);
 
-        TimerSettingRequestDto updateRequest = new TimerSettingRequestDto(
-                existingSetting.getUuid(),
+        TimerPresetRequestDto updateRequest = new TimerPresetRequestDto(
+                existingPreset.getUuid(),
+                defaultLabel.getUuid(),
                 defaultOption.getUuid(),
                 now,
                 future
@@ -163,43 +184,44 @@ public class TimerSettingControllerIT extends BaseIntegrationTest {
                 .header("Authorization", "Bearer " + authToken)
                 .body(updateRequest)
                 .when()
-                .put("/api/v1/timer-settings");
+                .put("/api/v1/timer-presets");
 
         // 3. Assert
         response.then()
                 .log().ifValidationFails()
                 .statusCode(HttpStatus.OK.value())
-                .body("uuid", equalTo(existingSetting.getUuid().toString()));
+                .body("uuid", equalTo(existingPreset.getUuid().toString()));
     }
 
     @Test
-    void shouldReturnTimerSetting_WhenPullingSettingsAndNoUpdatedAfterIsProvided() {
+    void shouldReturnTimerPreset_WhenPullingPresetsAndNoUpdatedAfterIsProvided() {
         // 1. Arrange
-        TimerSetting existingSetting = TimerSetting.builder()
+        TimerPreset existingPreset = TimerPreset.builder()
                 .uuid(UUID.randomUUID())
                 .user(testUser)
-                .preference(defaultOption)
+                .timerOption(defaultOption)
+                .label(defaultLabel)
                 .lastUpdated(System.currentTimeMillis())
                 .updatedAt(LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS))
                 .build();
-        timerSettingRepository.save(existingSetting);
+        timerPresetRepository.save(existingPreset);
 
         // 2. Act
         Response response = given()
                 .contentType(ContentType.JSON)
                 .header("Authorization", "Bearer " + authToken)
                 .when()
-                .get("/api/v1/timer-settings/sync");
+                .get("/api/v1/timer-presets/sync");
 
         // 3. Assert
         response.then()
                 .log().ifValidationFails()
                 .statusCode(HttpStatus.OK.value())
-                .body("uuid", equalTo(existingSetting.getUuid().toString()));
+                .body("uuid", equalTo(existingPreset.getUuid().toString()));
     }
 
     @Test
-    void shouldReturnNotFound_WhenPullingSettingsAndNoneExist() {
+    void shouldReturnNotFound_WhenPullingPresetsAndNoneExist() {
         // 1. Arrange
 
         // 2. Act
@@ -207,7 +229,7 @@ public class TimerSettingControllerIT extends BaseIntegrationTest {
                 .contentType(ContentType.JSON)
                 .header("Authorization", "Bearer " + authToken)
                 .when()
-                .get("/api/v1/timer-settings/sync");
+                .get("/api/v1/timer-presets/sync");
 
         // 3. Assert
         response.then()
@@ -216,19 +238,20 @@ public class TimerSettingControllerIT extends BaseIntegrationTest {
     }
 
     @Test
-    void shouldReturnTimerSetting_WhenUpdatedAfterIsProvided_AndSettingIsNewer() {
+    void shouldReturnTimerPreset_WhenUpdatedAfterIsProvided_AndPresetIsNewer() {
         // 1. Arrange
         LocalDateTime pastQueryDate = LocalDateTime.now().minusDays(5).truncatedTo(ChronoUnit.SECONDS);
         LocalDateTime recentUpdate = LocalDateTime.now().minusDays(1).truncatedTo(ChronoUnit.SECONDS);
 
-        TimerSetting setting = TimerSetting.builder()
+        TimerPreset preset = TimerPreset.builder()
                 .uuid(UUID.randomUUID())
                 .updatedAt(recentUpdate)
                 .user(testUser)
-                .preference(defaultOption)
+                .timerOption(defaultOption)
+                .label(defaultLabel)
                 .lastUpdated(System.currentTimeMillis())
                 .build();
-        timerSettingRepository.save(setting);
+        timerPresetRepository.save(preset);
 
         String isoDate = pastQueryDate.format(FORMATTER);
 
@@ -238,29 +261,30 @@ public class TimerSettingControllerIT extends BaseIntegrationTest {
                 .header("Authorization", "Bearer " + authToken)
                 .queryParam("updatedAfter", isoDate)
                 .when()
-                .get("/api/v1/timer-settings/sync");
+                .get("/api/v1/timer-presets/sync");
 
         // 3. Assert
         response.then()
                 .log().ifValidationFails()
                 .statusCode(HttpStatus.OK.value())
-                .body("uuid", equalTo(setting.getUuid().toString()));
+                .body("uuid", equalTo(preset.getUuid().toString()));
     }
 
     @Test
-    void shouldReturnNotFound_WhenUpdatedAfterIsProvided_AndSettingIsOlder() {
+    void shouldReturnNotFound_WhenUpdatedAfterIsProvided_AndPresetIsOlder() {
         // 1. Arrange
         LocalDateTime futureQueryDate = LocalDateTime.now().plusDays(5).truncatedTo(ChronoUnit.SECONDS);
         LocalDateTime oldUpdate = LocalDateTime.now().minusDays(5).truncatedTo(ChronoUnit.SECONDS);
 
-        TimerSetting setting = TimerSetting.builder()
+        TimerPreset preset = TimerPreset.builder()
                 .uuid(UUID.randomUUID())
                 .updatedAt(oldUpdate)
                 .user(testUser)
-                .preference(defaultOption)
+                .timerOption(defaultOption)
+                .label(defaultLabel)
                 .lastUpdated(System.currentTimeMillis())
                 .build();
-        timerSettingRepository.save(setting);
+        timerPresetRepository.save(preset);
 
         String isoDate = futureQueryDate.format(FORMATTER);
 
@@ -270,7 +294,7 @@ public class TimerSettingControllerIT extends BaseIntegrationTest {
                 .header("Authorization", "Bearer " + authToken)
                 .queryParam("updatedAfter", isoDate)
                 .when()
-                .get("/api/v1/timer-settings/sync");
+                .get("/api/v1/timer-presets/sync");
 
         // 3. Assert
         response.then()
