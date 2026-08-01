@@ -26,11 +26,11 @@ import lombok.experimental.SuperBuilder;
 public class TimerPreset extends SyncEntity implements UserOwned {
 
     @ManyToOne
-    @JoinColumn(name = "label_id", nullable = false)
+    @JoinColumn(name = "label_id", nullable = false, updatable = false)
     private Label label;
 
     @ManyToOne
-    @JoinColumn(name = "timer_option_id", nullable = false)
+    @JoinColumn(name = "timer_option_id", nullable = false, updatable = false)
     private TimerOption timerOption;
 
     @Column(name = "last_updated", nullable = false)
