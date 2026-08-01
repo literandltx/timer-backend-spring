@@ -259,7 +259,7 @@ public class TimerPresetControllerIT extends BaseIntegrationTest {
         Response response = given()
                 .contentType(ContentType.JSON)
                 .header("Authorization", "Bearer " + authToken)
-                .queryParam("updatedAfter", isoDate)
+                .queryParam("serverUpdatedAt", isoDate)
                 .when()
                 .get("/api/v1/timer-presets/sync");
 
@@ -292,7 +292,7 @@ public class TimerPresetControllerIT extends BaseIntegrationTest {
         Response response = given()
                 .contentType(ContentType.JSON)
                 .header("Authorization", "Bearer " + authToken)
-                .queryParam("updatedAfter", isoDate)
+                .queryParam("serverUpdatedAt", isoDate)
                 .when()
                 .get("/api/v1/timer-presets/sync");
 

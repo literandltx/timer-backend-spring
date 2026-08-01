@@ -59,12 +59,12 @@ public class LabelServiceImpl implements LabelService {
     }
 
     @Override
-    public List<LabelResponseDto> findAll(LocalDateTime updatedAfter, User authUser) {
+    public List<LabelResponseDto> findAll(LocalDateTime serverUpdatedAt, User authUser) {
         List<Label> labels;
 
-        if (updatedAfter != null) {
-            log.info("Fetching delta updates after: {}", updatedAfter);
-            labels = labelRepository.findByUserIdAndUpdatedAtAfter(authUser.getId(), updatedAfter);
+        if (serverUpdatedAt != null) {
+            log.info("Fetching delta updates after: {}", serverUpdatedAt);
+            labels = labelRepository.findByUserIdAndServerUpdatedAtAfter(authUser.getId(), serverUpdatedAt);
         } else {
             log.debug("Fetching all active labels from the database");
             labels = labelRepository.findByUserIdAndIsDeletedFalse(authUser.getId());

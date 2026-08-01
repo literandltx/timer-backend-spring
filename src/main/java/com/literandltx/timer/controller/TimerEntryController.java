@@ -43,10 +43,10 @@ public class TimerEntryController {
 
     @GetMapping
     public ResponseEntity<List<TimerEntryResponseDto>> findAll(
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime updatedAfter,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime serverUpdatedAt,
             @AuthenticationPrincipal User user
     ) {
-        List<TimerEntryResponseDto> labels = timerEntryService.findAll(updatedAfter, user);
+        List<TimerEntryResponseDto> labels = timerEntryService.findAll(serverUpdatedAt, user);
         return ResponseEntity.ok(labels);
     }
 

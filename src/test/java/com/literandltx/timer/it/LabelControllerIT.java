@@ -147,6 +147,7 @@ public class LabelControllerIT extends BaseIntegrationTest {
                 .user(testUser)
                 .createdAt(now)
                 .updatedAt(now)
+                .serverUpdatedAt(now)
                 .isDeleted(false)
                 .build();
 
@@ -157,6 +158,7 @@ public class LabelControllerIT extends BaseIntegrationTest {
                 .user(testUser)
                 .createdAt(now.plusHours(1))
                 .updatedAt(now.plusHours(1))
+                .serverUpdatedAt(now.plusHours(1))
                 .isDeleted(true)
                 .build();
 
@@ -194,6 +196,7 @@ public class LabelControllerIT extends BaseIntegrationTest {
                 .user(testUser)
                 .createdAt(past)
                 .updatedAt(past)
+                .serverUpdatedAt(past)
                 .isDeleted(false)
                 .build();
 
@@ -204,6 +207,7 @@ public class LabelControllerIT extends BaseIntegrationTest {
                 .user(testUser)
                 .createdAt(past)
                 .updatedAt(past.plusDays(2))
+                .serverUpdatedAt(past.plusDays(2))
                 .isDeleted(false)
                 .build();
 
@@ -214,7 +218,7 @@ public class LabelControllerIT extends BaseIntegrationTest {
         Response response = given()
                 .contentType(ContentType.JSON)
                 .header("Authorization", "Bearer " + authToken)
-                .queryParam("updatedAfter", isoDate)
+                .queryParam("serverUpdatedAt", isoDate)
                 .when()
                 .get("/api/v1/labels");
 
@@ -244,6 +248,7 @@ public class LabelControllerIT extends BaseIntegrationTest {
                 .user(testUser)
                 .createdAt(now)
                 .updatedAt(now)
+                .serverUpdatedAt(now)
                 .isDeleted(false)
                 .build();
 
@@ -298,6 +303,7 @@ public class LabelControllerIT extends BaseIntegrationTest {
                 .user(victimUser)
                 .createdAt(now)
                 .updatedAt(now)
+                .serverUpdatedAt(now)
                 .isDeleted(false)
                 .build();
         Label savedVictimLabel = labelRepository.save(victimLabel);
@@ -334,6 +340,7 @@ public class LabelControllerIT extends BaseIntegrationTest {
                 .user(testUser)
                 .createdAt(now)
                 .updatedAt(now)
+                .serverUpdatedAt(now)
                 .isDeleted(false)
                 .build();
         Label savedLabel = labelRepository.save(label);

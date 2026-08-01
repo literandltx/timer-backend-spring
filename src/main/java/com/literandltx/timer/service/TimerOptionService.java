@@ -13,7 +13,7 @@ import org.springframework.stereotype.Service;
 public interface TimerOptionService {
     TimerOptionResponseDto save(TimerOptionCreateRequestDto request, User authUser);
 
-    List<TimerOptionResponseDto> findAll(LocalDateTime updatedAfter, User authUser);
+    List<TimerOptionResponseDto> findAll(LocalDateTime serverUpdatedAt, User authUser);
 
     TimerOptionResponseDto update(UUID id, TimerOptionUpdateRequestDto request, User authUser);
 

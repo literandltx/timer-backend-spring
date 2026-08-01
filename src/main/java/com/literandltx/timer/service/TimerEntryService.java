@@ -13,7 +13,7 @@ import org.springframework.stereotype.Service;
 public interface TimerEntryService {
     TimerEntryResponseDto save(TimerEntryCreateRequestDto request, User authUser);
 
-    List<TimerEntryResponseDto> findAll(LocalDateTime updatedAfter, User authUser);
+    List<TimerEntryResponseDto> findAll(LocalDateTime serverUpdatedAt, User authUser);
 
     TimerEntryResponseDto update(UUID id, TimerEntryUpdateRequestDto request, User authUser);
 

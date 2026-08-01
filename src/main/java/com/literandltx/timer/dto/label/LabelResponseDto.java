@@ -11,6 +11,7 @@ public record LabelResponseDto(
         String color,
         LocalDateTime createdAt,
         LocalDateTime updatedAt,
+        LocalDateTime serverUpdatedAt,
         boolean deleted
 ) {
 }

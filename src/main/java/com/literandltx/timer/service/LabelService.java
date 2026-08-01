@@ -13,7 +13,7 @@ import org.springframework.stereotype.Service;
 public interface LabelService {
     LabelResponseDto save(LabelCreateRequestDto request, User authUser);
 
-    List<LabelResponseDto> findAll(LocalDateTime updatedAfter, User authUser);
+    List<LabelResponseDto> findAll(LocalDateTime serverUpdatedAt, User authUser);
 
     LabelResponseDto update(UUID id, LabelUpdateRequestDto request, User authUser);
 

@@ -43,10 +43,10 @@ public class TimerOptionController {
 
     @GetMapping
     public ResponseEntity<List<TimerOptionResponseDto>> findAll(
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime updatedAfter,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime serverUpdatedAt,
             @AuthenticationPrincipal User user
     ) {
-        List<TimerOptionResponseDto> labels = timerOptionService.findAll(updatedAfter, user);
+        List<TimerOptionResponseDto> labels = timerOptionService.findAll(serverUpdatedAt, user);
         return ResponseEntity.ok(labels);
     }
 

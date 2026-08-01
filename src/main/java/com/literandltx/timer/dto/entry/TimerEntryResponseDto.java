@@ -12,6 +12,7 @@ public record TimerEntryResponseDto(
         Long startTime,
         LocalDateTime createdAt,
         LocalDateTime updatedAt,
+        LocalDateTime serverUpdatedAt,
         boolean deleted
 ) {
 }

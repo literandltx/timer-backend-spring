@@ -10,5 +10,5 @@ import org.springframework.stereotype.Service;
 public interface TimerPresetService {
     TimerPresetResponseDto upsert(TimerPresetRequestDto request, User authUser);
 
-    TimerPresetResponseDto find(LocalDateTime updatedAfter, User authUser);
+    TimerPresetResponseDto find(LocalDateTime serverUpdatedAt, User authUser);
 }
