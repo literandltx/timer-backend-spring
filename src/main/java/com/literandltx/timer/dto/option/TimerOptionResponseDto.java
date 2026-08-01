@@ -10,6 +10,7 @@ public record TimerOptionResponseDto(
         Long value,
         LocalDateTime createdAt,
         LocalDateTime updatedAt,
+        LocalDateTime serverUpdatedAt,
         boolean deleted
 ) {
 }

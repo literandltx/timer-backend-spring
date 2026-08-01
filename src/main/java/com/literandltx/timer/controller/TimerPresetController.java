@@ -35,10 +35,10 @@ public class TimerPresetController {
 
     @GetMapping("/sync")
     public ResponseEntity<TimerPresetResponseDto> pullSettings(
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime updatedAfter,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime serverUpdatedAt,
             @AuthenticationPrincipal User user
     ) {
-        TimerPresetResponseDto response = timerPresetService.find(updatedAfter, user);
+        TimerPresetResponseDto response = timerPresetService.find(serverUpdatedAt, user);
 
         if (response == null) {
             return ResponseEntity.status(HttpStatus.NO_CONTENT).build();

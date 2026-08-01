@@ -9,6 +9,7 @@ public record TimerPresetResponseDto(
         UUID timerOptionUuid,
         LocalDateTime createdAt,
         LocalDateTime updatedAt,
+        LocalDateTime serverUpdatedAt,
         boolean deleted
 ) {
 }

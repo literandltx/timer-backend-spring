@@ -11,5 +11,5 @@ import org.springframework.stereotype.Repository;
 public interface TimerOptionRepository extends JpaRepository<TimerOption, UUID> {
     List<TimerOption> findByUserIdAndIsDeletedFalse(Long userId);
 
-    List<TimerOption> findByUserIdAndUpdatedAtAfter(Long userId, LocalDateTime updatedAfter);
+    List<TimerOption> findByUserIdAndServerUpdatedAtAfter(Long userId, LocalDateTime updatedAfter);
 }

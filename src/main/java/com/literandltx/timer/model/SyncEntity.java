@@ -4,6 +4,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Id;
 import jakarta.persistence.MappedSuperclass;
 import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
 import java.time.LocalDateTime;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
@@ -37,6 +38,9 @@ public abstract class SyncEntity {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
+    @Column(name = "server_updated_at", nullable = false)
+    private LocalDateTime serverUpdatedAt;
+
     @PrePersist
     protected void onCreate() {
         if (this.createdAt == null) {
@@ -45,6 +49,14 @@ public abstract class SyncEntity {
         if (this.updatedAt == null) {
             this.updatedAt = this.createdAt;
         }
+        if (this.serverUpdatedAt == null) {
+            this.serverUpdatedAt = this.createdAt;
+        }
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        this.serverUpdatedAt = LocalDateTime.now();
     }
 
 }

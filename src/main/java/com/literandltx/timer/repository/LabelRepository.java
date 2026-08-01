@@ -11,5 +11,5 @@ import org.springframework.stereotype.Repository;
 public interface LabelRepository extends JpaRepository<Label, UUID> {
     List<Label> findByUserIdAndIsDeletedFalse(Long userId);
 
-    List<Label> findByUserIdAndUpdatedAtAfter(Long userId, LocalDateTime updatedAfter);
+    List<Label> findByUserIdAndServerUpdatedAtAfter(Long userId, LocalDateTime updatedAfter);
 }

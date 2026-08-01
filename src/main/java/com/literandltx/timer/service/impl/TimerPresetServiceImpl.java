@@ -75,15 +75,17 @@ public class TimerPresetServiceImpl implements TimerPresetService {
     }
 
     @Override
-    public TimerPresetResponseDto find(LocalDateTime updatedAfter, User authUser) {
+    public TimerPresetResponseDto find(LocalDateTime updatedAfserverUpdatedAter, User authUser) {
         TimerPreset preset;
 
-        if (updatedAfter != null) {
-            log.debug("Fetching preset updated after: {}", updatedAfter);
-            Optional<TimerPreset> deltaPreset = timerPresetRepository.findByUserIdAndUpdatedAtAfter(authUser.getId(), updatedAfter);
+        if (updatedAfserverUpdatedAter != null) {
+            log.debug("Fetching preset updated after: {}", updatedAfserverUpdatedAter);
+            Optional<TimerPreset> deltaPreset = timerPresetRepository.findByUserIdAndServerUpdatedAtAfter(
+                    authUser.getId(), updatedAfserverUpdatedAter
+            );
 
             if (deltaPreset.isEmpty()) {
-                log.debug("No preset updates found after {} for user {}", updatedAfter, authUser.getId());
+                log.debug("No preset updates found after {} for user {}", updatedAfserverUpdatedAter, authUser.getId());
                 return null;
             }
 

@@ -59,12 +59,12 @@ public class TimerOptionServiceImpl implements TimerOptionService {
     }
 
     @Override
-    public List<TimerOptionResponseDto> findAll(LocalDateTime updatedAfter, User authUser) {
+    public List<TimerOptionResponseDto> findAll(LocalDateTime serverUpdatedAt, User authUser) {
         List<TimerOption> options;
 
-        if (updatedAfter != null) {
-            log.info("Fetching delta updates for timer options after: {}", updatedAfter);
-            options = timerOptionRepository.findByUserIdAndUpdatedAtAfter(authUser.getId(), updatedAfter);
+        if (serverUpdatedAt != null) {
+            log.info("Fetching delta updates for timer options after: {}", serverUpdatedAt);
+            options = timerOptionRepository.findByUserIdAndServerUpdatedAtAfter(authUser.getId(), serverUpdatedAt);
         } else {
             log.info("Fetching all active timer options");
             options = timerOptionRepository.findByUserIdAndIsDeletedFalse(authUser.getId());

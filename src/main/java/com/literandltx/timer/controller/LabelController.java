@@ -43,10 +43,10 @@ public class LabelController {
 
     @GetMapping
     public ResponseEntity<List<LabelResponseDto>> findAll(
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime updatedAfter,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime serverUpdatedAt,
             @AuthenticationPrincipal User user
     ) {
-        List<LabelResponseDto> labels = labelService.findAll(updatedAfter, user);
+        List<LabelResponseDto> labels = labelService.findAll(serverUpdatedAt, user);
         return ResponseEntity.ok(labels);
     }
 

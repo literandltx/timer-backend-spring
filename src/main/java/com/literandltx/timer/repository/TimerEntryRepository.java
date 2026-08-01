@@ -10,7 +10,7 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface TimerEntryRepository extends JpaRepository<TimerEntry, UUID> {
 
-    List<TimerEntry> findByUserIdAndUpdatedAtAfter(Long userId, LocalDateTime updatedAfter);
+    List<TimerEntry> findByUserIdAndServerUpdatedAtAfter(Long userId, LocalDateTime updatedAfter);
 
     List<TimerEntry> findByUserIdAndIsDeletedFalse(Long userId);
 }

@@ -167,6 +167,7 @@ public class TimerEntryControllerIT extends BaseIntegrationTest {
                 .user(testUser)
                 .createdAt(now)
                 .updatedAt(now)
+                .serverUpdatedAt(now)
                 .isDeleted(false)
                 .build();
 
@@ -178,6 +179,7 @@ public class TimerEntryControllerIT extends BaseIntegrationTest {
                 .user(testUser)
                 .createdAt(now.plusHours(1))
                 .updatedAt(now.plusHours(1))
+                .serverUpdatedAt(now.plusHours(1))
                 .isDeleted(true)
                 .build();
 
@@ -215,6 +217,7 @@ public class TimerEntryControllerIT extends BaseIntegrationTest {
                 .user(testUser)
                 .createdAt(past)
                 .updatedAt(past)
+                .serverUpdatedAt(past)
                 .isDeleted(false)
                 .build();
 
@@ -226,6 +229,7 @@ public class TimerEntryControllerIT extends BaseIntegrationTest {
                 .user(testUser)
                 .createdAt(past)
                 .updatedAt(future)
+                .serverUpdatedAt(future)
                 .isDeleted(false)
                 .build();
 
@@ -236,7 +240,7 @@ public class TimerEntryControllerIT extends BaseIntegrationTest {
         Response response = given()
                 .contentType(ContentType.JSON)
                 .header("Authorization", "Bearer " + authToken)
-                .queryParam("updatedAfter", isoDate)
+                .queryParam("serverUpdatedAt", isoDate)
                 .when()
                 .get("/api/v1/timer-entries");
 
@@ -265,6 +269,7 @@ public class TimerEntryControllerIT extends BaseIntegrationTest {
                 .user(testUser)
                 .createdAt(now)
                 .updatedAt(now)
+                .serverUpdatedAt(now)
                 .isDeleted(false)
                 .build();
 
@@ -307,6 +312,7 @@ public class TimerEntryControllerIT extends BaseIntegrationTest {
                 .user(testUser)
                 .createdAt(now)
                 .updatedAt(now)
+                .serverUpdatedAt(now)
                 .isDeleted(false)
                 .build();
         Label savedLabel = labelRepository.save(newLabel);
@@ -319,6 +325,7 @@ public class TimerEntryControllerIT extends BaseIntegrationTest {
                 .user(testUser)
                 .createdAt(now)
                 .updatedAt(now)
+                .serverUpdatedAt(now)
                 .isDeleted(false)
                 .build();
         TimerEntry savedEntry = timerEntryRepository.save(entry);
@@ -362,6 +369,7 @@ public class TimerEntryControllerIT extends BaseIntegrationTest {
                 .user(victimUser)
                 .createdAt(now)
                 .updatedAt(now)
+                .serverUpdatedAt(now)
                 .isDeleted(false)
                 .build();
         Label savedVictimLabel = labelRepository.save(victimLabel);
@@ -374,6 +382,7 @@ public class TimerEntryControllerIT extends BaseIntegrationTest {
                 .user(testUser)
                 .createdAt(now)
                 .updatedAt(now)
+                .serverUpdatedAt(now)
                 .isDeleted(false)
                 .build();
         TimerEntry savedEntry = timerEntryRepository.save(entry);
@@ -415,6 +424,7 @@ public class TimerEntryControllerIT extends BaseIntegrationTest {
                 .user(victimUser)
                 .createdAt(now)
                 .updatedAt(now)
+                .serverUpdatedAt(now)
                 .isDeleted(false)
                 .build();
         labelRepository.save(victimLabel);
@@ -427,6 +437,7 @@ public class TimerEntryControllerIT extends BaseIntegrationTest {
                 .user(victimUser)
                 .createdAt(now)
                 .updatedAt(now)
+                .serverUpdatedAt(now)
                 .isDeleted(false)
                 .build();
         TimerEntry savedVictimEntry = timerEntryRepository.save(victimEntry);
@@ -463,6 +474,7 @@ public class TimerEntryControllerIT extends BaseIntegrationTest {
                 .user(testUser)
                 .createdAt(now)
                 .updatedAt(now)
+                .serverUpdatedAt(now)
                 .isDeleted(false)
                 .build();
         TimerEntry savedEntry = timerEntryRepository.save(entry);

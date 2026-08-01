@@ -141,6 +141,7 @@ public class TimerOptionControllerIT extends BaseIntegrationTest {
                 .user(testUser)
                 .createdAt(now)
                 .updatedAt(now)
+                .serverUpdatedAt(now)
                 .isDeleted(false)
                 .build();
 
@@ -150,6 +151,7 @@ public class TimerOptionControllerIT extends BaseIntegrationTest {
                 .user(testUser)
                 .createdAt(now.plusHours(1))
                 .updatedAt(now.plusHours(1))
+                .serverUpdatedAt(now.plusHours(1))
                 .isDeleted(true)
                 .build();
 
@@ -185,6 +187,7 @@ public class TimerOptionControllerIT extends BaseIntegrationTest {
                 .user(testUser)
                 .createdAt(past)
                 .updatedAt(future)
+                .serverUpdatedAt(future)
                 .isDeleted(false)
                 .build();
 
@@ -194,6 +197,7 @@ public class TimerOptionControllerIT extends BaseIntegrationTest {
                 .user(testUser)
                 .createdAt(past)
                 .updatedAt(past)
+                .serverUpdatedAt(past)
                 .isDeleted(false)
                 .build();
 
@@ -204,7 +208,7 @@ public class TimerOptionControllerIT extends BaseIntegrationTest {
         Response response = given()
                 .contentType(ContentType.JSON)
                 .header("Authorization", "Bearer " + authToken)
-                .queryParam("updatedAfter", isoDate)
+                .queryParam("serverUpdatedAt", isoDate)
                 .when()
                 .get("/api/v1/timer-options");
 
@@ -231,6 +235,7 @@ public class TimerOptionControllerIT extends BaseIntegrationTest {
                 .user(testUser)
                 .createdAt(now)
                 .updatedAt(now)
+                .serverUpdatedAt(now)
                 .isDeleted(false)
                 .build();
 
@@ -280,6 +285,7 @@ public class TimerOptionControllerIT extends BaseIntegrationTest {
                 .user(victimUser)
                 .createdAt(now)
                 .updatedAt(now)
+                .serverUpdatedAt(now)
                 .isDeleted(false)
                 .build();
         TimerOption savedVictimOption = timerOptionRepository.save(victimOption);
@@ -314,6 +320,7 @@ public class TimerOptionControllerIT extends BaseIntegrationTest {
                 .user(testUser)
                 .createdAt(now)
                 .updatedAt(now)
+                .serverUpdatedAt(now)
                 .isDeleted(false)
                 .build();
         TimerOption savedOption = timerOptionRepository.save(option);

@@ -70,12 +70,12 @@ public class TimerEntryServiceImpl implements TimerEntryService {
     }
 
     @Override
-    public List<TimerEntryResponseDto> findAll(LocalDateTime updatedAfter, User authUser) {
+    public List<TimerEntryResponseDto> findAll(LocalDateTime serverUpdatedAt, User authUser) {
         List<TimerEntry> entries;
 
-        if (updatedAfter != null) {
-            log.info("Fetching delta updates for timer entries after: {}", updatedAfter);
-            entries = timerEntryRepository.findByUserIdAndUpdatedAtAfter(authUser.getId(), updatedAfter);
+        if (serverUpdatedAt != null) {
+            log.info("Fetching delta updates for timer entries after: {}", serverUpdatedAt);
+            entries = timerEntryRepository.findByUserIdAndServerUpdatedAtAfter(authUser.getId(), serverUpdatedAt);
         } else {
             log.info("Fetching all active timer entries from the database");
             entries = timerEntryRepository.findByUserIdAndIsDeletedFalse(authUser.getId());

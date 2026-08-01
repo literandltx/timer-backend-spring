@@ -13,5 +13,5 @@ public interface TimerPresetRepository extends JpaRepository<TimerPreset, UUID> 
 
     Optional<TimerPreset> findByUserId(Long userId);
 
-    Optional<TimerPreset> findByUserIdAndUpdatedAtAfter(Long userId, LocalDateTime updatedAfter);
+    Optional<TimerPreset> findByUserIdAndServerUpdatedAtAfter(Long userId, LocalDateTime updatedAfter);
 }

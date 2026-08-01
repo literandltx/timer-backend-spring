@@ -1,0 +1,55 @@
+databaseChangeLog:
+  - changeSet:
+      id: 09-add-and-backfill-server-updated-at
+      author: literandltx
+      changes:
+        - addColumn:
+            tableName: labels
+            columns:
+              - column:
+                  name: server_updated_at
+                  type: TIMESTAMP
+        - addColumn:
+            tableName: timer_entries
+            columns:
+              - column:
+                  name: server_updated_at
+                  type: TIMESTAMP
+        - addColumn:
+            tableName: timer_options
+            columns:
+              - column:
+                  name: server_updated_at
+                  type: TIMESTAMP
+        - addColumn:
+            tableName: timer_presets
+            columns:
+              - column:
+                  name: server_updated_at
+                  type: TIMESTAMP
+
+        - sql:
+            sql: UPDATE labels SET server_updated_at = updated_at;
+        - sql:
+            sql: UPDATE timer_entries SET server_updated_at = updated_at;
+        - sql:
+            sql: UPDATE timer_options SET server_updated_at = updated_at;
+        - sql:
+            sql: UPDATE timer_presets SET server_updated_at = updated_at;
+
+        - addNotNullConstraint:
+            tableName: labels
+            columnName: server_updated_at
+            columnDataType: TIMESTAMP
+        - addNotNullConstraint:
+            tableName: timer_entries
+            columnName: server_updated_at
+            columnDataType: TIMESTAMP
+        - addNotNullConstraint:
+            tableName: timer_options
+            columnName: server_updated_at
+            columnDataType: TIMESTAMP
+        - addNotNullConstraint:
+            tableName: timer_presets
+            columnName: server_updated_at
+            columnDataType: TIMESTAMP
