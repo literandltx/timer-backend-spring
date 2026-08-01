@@ -80,7 +80,9 @@ public class TimerPresetServiceImpl implements TimerPresetService {
 
         if (updatedAfserverUpdatedAter != null) {
             log.debug("Fetching preset updated after: {}", updatedAfserverUpdatedAter);
-            Optional<TimerPreset> deltaPreset = timerPresetRepository.findByUserIdAndServerUpdatedAtAfter(authUser.getId(), updatedAfserverUpdatedAter);
+            Optional<TimerPreset> deltaPreset = timerPresetRepository.findByUserIdAndServerUpdatedAtAfter(
+                    authUser.getId(), updatedAfserverUpdatedAter
+            );
 
             if (deltaPreset.isEmpty()) {
                 log.debug("No preset updates found after {} for user {}", updatedAfserverUpdatedAter, authUser.getId());
