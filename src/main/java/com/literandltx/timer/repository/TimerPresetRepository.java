@@ -9,7 +9,6 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface TimerPresetRepository extends JpaRepository<TimerPreset, UUID> {
-    Optional<TimerPreset> findByUuidAndUserId(UUID uuid, Long userId);
 
     Optional<TimerPreset> findByUserId(Long userId);
 
