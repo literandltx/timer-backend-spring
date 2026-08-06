@@ -2,8 +2,8 @@ package com.literandltx.timer.security;
 
 import com.literandltx.timer.config.env.JwtConfig;
 import com.literandltx.timer.dto.user.AuthTokensDto;
-import com.literandltx.timer.dto.user.UserLoginRequestDto;
-import com.literandltx.timer.dto.user.UserLoginResponseDto;
+import com.literandltx.timer.dto.user.login.UserLoginRequestDto;
+import com.literandltx.timer.dto.user.login.UserLoginResponseDto;
 import com.literandltx.timer.exception.custom.InvalidTokenTypeException;
 import com.literandltx.timer.exception.custom.TokenRefreshException;
 import com.literandltx.timer.model.RefreshToken;

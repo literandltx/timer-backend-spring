@@ -1,4 +1,4 @@
-package com.literandltx.timer.dto.user;
+package com.literandltx.timer.dto.user.login;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;

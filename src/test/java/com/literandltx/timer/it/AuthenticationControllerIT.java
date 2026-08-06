@@ -8,8 +8,8 @@ import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.oneOf;
 
-import com.literandltx.timer.dto.user.UserLoginRequestDto;
-import com.literandltx.timer.dto.user.UserRegistrationRequestDto;
+import com.literandltx.timer.dto.user.login.UserLoginRequestDto;
+import com.literandltx.timer.dto.user.register.UserRegistrationRequestDto;
 import com.literandltx.timer.model.Role;
 import com.literandltx.timer.model.RoleName;
 import com.literandltx.timer.model.User;

@@ -1,7 +1,6 @@
 package com.literandltx.timer.dto.user;
 
 import com.literandltx.timer.validation.FieldMatch;
-import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
@@ -12,11 +11,7 @@ import lombok.Data;
         second = "confirmationPassword",
         message = "Password and repeat password shouldn't be empty and should be equal"
 )
-public class UserUpdateRequestDto {
-    @Email
-    @NotBlank
-    private String email;
-
+public class UserChangePasswordRequestDto {
     @NotBlank
     private String currentPassword;
 

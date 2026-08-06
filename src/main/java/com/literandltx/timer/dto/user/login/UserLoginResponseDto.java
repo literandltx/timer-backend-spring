@@ -1,4 +1,4 @@
-package com.literandltx.timer.dto.user;
+package com.literandltx.timer.dto.user.login;
 
 public record UserLoginResponseDto(String token) {
 }
