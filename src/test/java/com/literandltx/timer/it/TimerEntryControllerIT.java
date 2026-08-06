@@ -10,7 +10,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.literandltx.timer.dto.entry.TimerEntryCreateRequestDto;
 import com.literandltx.timer.dto.entry.TimerEntryUpdateRequestDto;
-import com.literandltx.timer.dto.user.UserLoginRequestDto;
+import com.literandltx.timer.dto.user.login.UserLoginRequestDto;
 import com.literandltx.timer.model.Label;
 import com.literandltx.timer.model.Role;
 import com.literandltx.timer.model.RoleName;

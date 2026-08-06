@@ -5,7 +5,7 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.notNullValue;
 
 import com.literandltx.timer.dto.actuator.SystemStatus;
-import com.literandltx.timer.dto.user.UserLoginRequestDto;
+import com.literandltx.timer.dto.user.login.UserLoginRequestDto;
 import com.literandltx.timer.model.Role;
 import com.literandltx.timer.model.RoleName;
 import com.literandltx.timer.model.User;

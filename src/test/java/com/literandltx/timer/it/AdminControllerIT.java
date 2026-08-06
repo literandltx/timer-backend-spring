@@ -4,7 +4,7 @@ import static io.restassured.RestAssured.given;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.literandltx.timer.dto.user.UserLoginRequestDto;
+import com.literandltx.timer.dto.user.login.UserLoginRequestDto;
 import com.literandltx.timer.model.Role;
 import com.literandltx.timer.model.RoleName;
 import com.literandltx.timer.model.User;

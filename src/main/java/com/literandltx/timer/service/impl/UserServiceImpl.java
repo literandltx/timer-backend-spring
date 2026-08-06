@@ -1,7 +1,9 @@
 package com.literandltx.timer.service.impl;
 
-import com.literandltx.timer.dto.user.UserRegistrationRequestDto;
-import com.literandltx.timer.dto.user.UserRegistrationResponseDto;
+import com.literandltx.timer.dto.user.UserChangeEmailRequestDto;
+import com.literandltx.timer.dto.user.UserChangePasswordRequestDto;
+import com.literandltx.timer.dto.user.register.UserRegistrationRequestDto;
+import com.literandltx.timer.dto.user.register.UserRegistrationResponseDto;
 import com.literandltx.timer.exception.custom.UserAlreadyExistsException;
 import com.literandltx.timer.mapper.UserMapper;
 import com.literandltx.timer.model.Role;
@@ -50,6 +52,32 @@ public class UserServiceImpl implements UserService {
         log.info("User registered with id: {} and email: {}", savedUser.getId(), savedUser.getEmail());
 
         return userMapper.toModel(savedUser);
+    }
+
+    @Override
+    public void changeEmail(UserChangeEmailRequestDto request, User user) {
+        log.info("Attempting to change user's with email: {}", user.getEmail());
+
+        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+            throw new RuntimeException("Invalid password.");
+        }
+        user.setEmail(request.getNewEmail());
+
+        userRepository.save(user);
+        log.info("Successfully updated user with id: {}", user.getId());
+    }
+
+    @Override
+    public void changePassword(UserChangePasswordRequestDto request, User user) {
+        log.info("Attempting to change user's email with email: {}", user.getEmail());
+
+        if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPassword())) {
+            throw new RuntimeException("Invalid password.");
+        }
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+
+        userRepository.save(user);
+        log.info("Successfully updated user with id: {}", user.getId());
     }
 
     @Override

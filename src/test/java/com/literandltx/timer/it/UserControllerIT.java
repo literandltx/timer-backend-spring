@@ -3,7 +3,9 @@ package com.literandltx.timer.it;
 import static io.restassured.RestAssured.given;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.literandltx.timer.dto.user.UserLoginRequestDto;
+import com.literandltx.timer.dto.user.UserChangeEmailRequestDto;
+import com.literandltx.timer.dto.user.UserChangePasswordRequestDto;
+import com.literandltx.timer.dto.user.login.UserLoginRequestDto;
 import com.literandltx.timer.model.Label;
 import com.literandltx.timer.model.Role;
 import com.literandltx.timer.model.RoleName;
@@ -206,5 +208,153 @@ public class UserControllerIT extends BaseIntegrationTest {
         response.then()
                 .log().ifValidationFails()
                 .statusCode(HttpStatus.UNAUTHORIZED.value());
+    }
+
+    @Test
+    void shouldChangeEmail_WhenValidRequestAndAuthorized() {
+        // 1. Arrange
+        Role userRole = roleRepository.findByName(RoleName.USER)
+                .orElseThrow(() -> new IllegalStateException("USER role not found"));
+
+        User existingUser = new User();
+        existingUser.setEmail(userEmail);
+        existingUser.setPassword(passwordEncoder.encode(userPlainPassword));
+        existingUser.setRoles(Set.of(userRole));
+        userRepository.save(existingUser);
+
+        UserLoginRequestDto loginRequest = new UserLoginRequestDto();
+        loginRequest.setUsername(userEmail);
+        loginRequest.setPassword(userPlainPassword);
+
+        String token = given()
+                .contentType(ContentType.JSON)
+                .body(loginRequest)
+                .when()
+                .post("/api/v1/auth/login")
+                .then()
+                .statusCode(HttpStatus.OK.value())
+                .extract()
+                .path("token");
+
+        UserChangeEmailRequestDto changeEmailRequest = new UserChangeEmailRequestDto();
+        changeEmailRequest.setNewEmail("new_email@email.com");
+        changeEmailRequest.setPassword(userPlainPassword);
+
+        // 2. Act
+        given()
+                .header("Authorization", "Bearer " + token)
+                .contentType(ContentType.JSON)
+                .body(changeEmailRequest)
+                .when()
+                .post("/api/v1/users/change/email")
+                .then()
+                .log().ifValidationFails()
+                .statusCode(HttpStatus.NO_CONTENT.value());
+
+        // 3. Assert
+        Integer userCount = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM users WHERE email = ?",
+                Integer.class,
+                "new_email@email.com"
+        );
+        assertThat(userCount).isEqualTo(1);
+    }
+
+    @Test
+    void shouldChangePassword_WhenValidRequestAndAuthorized() {
+        // 1. Arrange
+        Role userRole = roleRepository.findByName(RoleName.USER)
+                .orElseThrow(() -> new IllegalStateException("USER role not found"));
+
+        User existingUser = new User();
+        existingUser.setEmail(userEmail);
+        existingUser.setPassword(passwordEncoder.encode(userPlainPassword));
+        existingUser.setRoles(Set.of(userRole));
+        userRepository.save(existingUser);
+
+        UserLoginRequestDto loginRequest = new UserLoginRequestDto();
+        loginRequest.setUsername(userEmail);
+        loginRequest.setPassword(userPlainPassword);
+
+        String token = given()
+                .contentType(ContentType.JSON)
+                .body(loginRequest)
+                .when()
+                .post("/api/v1/auth/login")
+                .then()
+                .statusCode(HttpStatus.OK.value())
+                .extract()
+                .path("token");
+
+        UserChangePasswordRequestDto changePasswordRequest = new UserChangePasswordRequestDto();
+        changePasswordRequest.setCurrentPassword(userPlainPassword);
+        changePasswordRequest.setNewPassword("new_secure_password");
+        changePasswordRequest.setConfirmationPassword("new_secure_password");
+
+        // 2. Act
+        given()
+                .header("Authorization", "Bearer " + token)
+                .contentType(ContentType.JSON)
+                .body(changePasswordRequest)
+                .when()
+                .post("/api/v1/users/change/password")
+                .then()
+                .log().ifValidationFails()
+                .statusCode(HttpStatus.NO_CONTENT.value());
+
+        // 3. Assert
+        UserLoginRequestDto newLoginRequest = new UserLoginRequestDto();
+        newLoginRequest.setUsername(userEmail);
+        newLoginRequest.setPassword("new_secure_password");
+
+        given()
+                .contentType(ContentType.JSON)
+                .body(newLoginRequest)
+                .when()
+                .post("/api/v1/auth/login")
+                .then()
+                .statusCode(HttpStatus.OK.value());
+    }
+
+    @Test
+    void shouldReturnBadRequest_WhenChangePasswordHasMismatchedConfirmation() {
+        // 1. Arrange
+        Role userRole = roleRepository.findByName(RoleName.USER)
+                .orElseThrow(() -> new IllegalStateException("USER role not found"));
+
+        User existingUser = new User();
+        existingUser.setEmail(userEmail);
+        existingUser.setPassword(passwordEncoder.encode(userPlainPassword));
+        existingUser.setRoles(Set.of(userRole));
+        userRepository.save(existingUser);
+
+        UserLoginRequestDto loginRequest = new UserLoginRequestDto();
+        loginRequest.setUsername(userEmail);
+        loginRequest.setPassword(userPlainPassword);
+
+        String token = given()
+                .contentType(ContentType.JSON)
+                .body(loginRequest)
+                .when()
+                .post("/api/v1/auth/login")
+                .then()
+                .statusCode(HttpStatus.OK.value())
+                .extract()
+                .path("token");
+
+        UserChangePasswordRequestDto changePasswordRequest = new UserChangePasswordRequestDto();
+        changePasswordRequest.setCurrentPassword(userPlainPassword);
+        changePasswordRequest.setNewPassword("new_secure_password");
+        changePasswordRequest.setConfirmationPassword("different_password");
+
+        // 2. Act & Assert
+        given()
+                .header("Authorization", "Bearer " + token)
+                .contentType(ContentType.JSON)
+                .body(changePasswordRequest)
+                .when()
+                .post("/api/v1/users/change/password")
+                .then()
+                .statusCode(HttpStatus.BAD_REQUEST.value());
     }
 }

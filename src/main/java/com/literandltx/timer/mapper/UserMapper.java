@@ -1,9 +1,9 @@
 package com.literandltx.timer.mapper;
 
 import com.literandltx.timer.config.MapperConfig;
-import com.literandltx.timer.dto.user.UserRegistrationRequestDto;
-import com.literandltx.timer.dto.user.UserRegistrationResponseDto;
 import com.literandltx.timer.dto.user.UserResponseDto;
+import com.literandltx.timer.dto.user.register.UserRegistrationRequestDto;
+import com.literandltx.timer.dto.user.register.UserRegistrationResponseDto;
 import com.literandltx.timer.model.Role;
 import com.literandltx.timer.model.User;
 import java.util.Set;
