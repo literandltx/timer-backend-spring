@@ -193,6 +193,12 @@ public class UserControllerIT extends BaseIntegrationTest {
                 existingUser.getId()
         );
         assertThat(labelCount).isEqualTo(0);
+        Integer timerOptionCount = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM timer_options WHERE user_id = ?",
+                Integer.class,
+                existingUser.getId()
+        );
+        assertThat(timerOptionCount).isEqualTo(0);
     }
 
     @Test
