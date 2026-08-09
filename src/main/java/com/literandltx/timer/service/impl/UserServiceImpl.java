@@ -82,10 +82,10 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    public void deleteUser(Long id) {
-        log.info("Attempting to permanently delete user and all data for id: {}", id);
+    public void deleteUser(User authUser) {
+        log.info("Attempting to permanently delete user and all data for id: {}", authUser.getId());
 
-        User user = getUserOrThrow(id);
+        User user = getUserOrThrow(authUser.getId());
 
         if (user.getTimerPreset() != null) {
             timerPresetRepository.delete(user.getTimerPreset());
@@ -95,7 +95,7 @@ public class UserServiceImpl implements UserService {
 
         userRepository.delete(user);
 
-        log.info("Successfully deleted user with id: {}", id);
+        log.info("Successfully deleted user with id: {}", user.getId());
     }
 
     private User getUserOrThrow(Long id) {
