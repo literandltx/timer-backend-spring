@@ -308,6 +308,8 @@ public class UserControllerIT extends BaseIntegrationTest {
                 .log().ifValidationFails()
                 .statusCode(HttpStatus.NO_CONTENT.value());
 
+        jdbcTemplate.execute("DELETE FROM refresh_tokens WHERE user_id = " + existingUser.getId());
+
         // 3. Assert
         UserLoginRequestDto newLoginRequest = new UserLoginRequestDto();
         newLoginRequest.setUsername(userEmail);
