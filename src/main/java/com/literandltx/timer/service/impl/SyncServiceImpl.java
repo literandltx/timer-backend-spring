@@ -41,6 +41,9 @@ public class SyncServiceImpl implements SyncService {
         List<Long> successfulIds = new ArrayList<>();
         List<SyncQueueBulkResponse.FailedSyncAction> failedActions = new ArrayList<>();
 
+        response.setSuccessfulIds(successfulIds);
+        response.setFailedActions(failedActions);
+
         if (request == null || request.getActions() == null || request.getActions().isEmpty()) {
             log.debug("Received empty or null sync queue bulk request.");
             return response;
@@ -79,8 +82,6 @@ public class SyncServiceImpl implements SyncService {
         log.info("Finished sync queue processing. Successes: {}/{}, Failures: {}/{}",
                 successfulIds.size(), totalActions, failedActions.size(), totalActions);
 
-        response.setSuccessfulIds(successfulIds);
-        response.setFailedActions(failedActions);
         return response;
     }
 
