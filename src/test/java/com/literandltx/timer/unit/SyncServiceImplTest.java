@@ -91,7 +91,7 @@ class SyncServiceImplTest {
         // 1. Arrange
         User user = mock(User.class);
         UUID entityId = UUID.randomUUID();
-        
+
         SyncActionDto actionDto = new SyncActionDto();
         actionDto.setId(1L);
         actionDto.setEntityId(entityId);
@@ -136,7 +136,7 @@ class SyncServiceImplTest {
         assertEquals(1, response.getSuccessfulIds().size());
         assertEquals(2L, response.getSuccessfulIds().get(0));
         assertTrue(response.getFailedActions().isEmpty());
-        
+
         // Verify payloadMapper was never called since action is DELETE
         verify(payloadMapper, never()).extractPayload(any());
         verify(timerEntryService).delete(entityId, user);
@@ -146,7 +146,7 @@ class SyncServiceImplTest {
     void processQueue_WhenPayloadExtractionFails_ShouldAddToFailedActions() {
         // 1. Arrange
         User user = mock(User.class);
-        
+
         SyncActionDto actionDto = new SyncActionDto();
         actionDto.setId(3L);
         actionDto.setEntityId(UUID.randomUUID());
@@ -173,7 +173,7 @@ class SyncServiceImplTest {
         // 1. Arrange
         User user = mock(User.class);
         UUID entityId = UUID.randomUUID();
-        
+
         SyncActionDto actionDto = new SyncActionDto();
         actionDto.setId(4L);
         actionDto.setEntityId(entityId);
@@ -185,7 +185,7 @@ class SyncServiceImplTest {
 
         LabelCreateRequestDto payload = mock(LabelCreateRequestDto.class);
         when(payloadMapper.extractPayload(actionDto)).thenReturn(Optional.of(payload));
-        
+
         doThrow(new RuntimeException("Database error")).when(labelService).save(payload, user);
 
         // 2. Act
@@ -197,12 +197,12 @@ class SyncServiceImplTest {
         assertEquals(4L, response.getFailedActions().get(0).getId());
         assertEquals("Database error", response.getFailedActions().get(0).getError());
     }
-    
+
     @Test
     void processQueue_WhenEntityTypeIsUnknown_ShouldLogWarningAndSucceedWithoutCallingServices() {
         // 1. Arrange
         User user = mock(User.class);
-        
+
         SyncActionDto actionDto = new SyncActionDto();
         actionDto.setId(5L);
         actionDto.setEntityId(UUID.randomUUID());
@@ -222,7 +222,7 @@ class SyncServiceImplTest {
         assertEquals(1, response.getSuccessfulIds().size());
         assertEquals(5L, response.getSuccessfulIds().get(0));
         assertTrue(response.getFailedActions().isEmpty());
-        
+
         verify(labelService, never()).save(any(), eq(user));
         verify(timerEntryService, never()).save(any(), eq(user));
     }
@@ -231,23 +231,38 @@ class SyncServiceImplTest {
     void processQueue_LabelActions_ShouldCallCorrectLabelServiceMethods() {
         // 1. Arrange
         User user = mock(User.class);
-        UUID id1 = UUID.randomUUID(), id2 = UUID.randomUUID(), id3 = UUID.randomUUID(), id4 = UUID.randomUUID();
+        UUID id1 = UUID.randomUUID();
+        UUID id2 = UUID.randomUUID();
+        UUID id3 = UUID.randomUUID();
+        UUID id4 = UUID.randomUUID();
 
         SyncActionDto createAction = new SyncActionDto();
-        createAction.setId(1L); createAction.setEntityId(id1); createAction.setEntityType("LABEL"); createAction.setAction("CREATE");
+        createAction.setId(1L);
+        createAction.setEntityId(id1);
+        createAction.setEntityType("LABEL");
+        createAction.setAction("CREATE");
         LabelCreateRequestDto createPayload = mock(LabelCreateRequestDto.class);
         when(payloadMapper.extractPayload(createAction)).thenReturn(Optional.of(createPayload));
 
         SyncActionDto updateAction = new SyncActionDto();
-        updateAction.setId(2L); updateAction.setEntityId(id2); updateAction.setEntityType("LABEL"); updateAction.setAction("UPDATE");
+        updateAction.setId(2L);
+        updateAction.setEntityId(id2);
+        updateAction.setEntityType("LABEL");
+        updateAction.setAction("UPDATE");
         LabelUpdateRequestDto updatePayload = mock(LabelUpdateRequestDto.class);
         when(payloadMapper.extractPayload(updateAction)).thenReturn(Optional.of(updatePayload));
 
         SyncActionDto deleteAction = new SyncActionDto();
-        deleteAction.setId(3L); deleteAction.setEntityId(id3); deleteAction.setEntityType("LABEL"); deleteAction.setAction("DELETE");
+        deleteAction.setId(3L);
+        deleteAction.setEntityId(id3);
+        deleteAction.setEntityType("LABEL");
+        deleteAction.setAction("DELETE");
 
         SyncActionDto unsupportedAction = new SyncActionDto();
-        unsupportedAction.setId(4L); unsupportedAction.setEntityId(id4); unsupportedAction.setEntityType("LABEL"); unsupportedAction.setAction("UNKNOWN_ACTION");
+        unsupportedAction.setId(4L);
+        unsupportedAction.setEntityId(id4);
+        unsupportedAction.setEntityType("LABEL");
+        unsupportedAction.setAction("UNKNOWN_ACTION");
         when(payloadMapper.extractPayload(unsupportedAction)).thenReturn(Optional.of(new Object()));
 
         SyncQueueBulkRequest request = new SyncQueueBulkRequest();
@@ -268,23 +283,38 @@ class SyncServiceImplTest {
     void processQueue_TimerEntryActions_ShouldCallCorrectTimerEntryServiceMethods() {
         // 1. Arrange
         User user = mock(User.class);
-        UUID id1 = UUID.randomUUID(), id2 = UUID.randomUUID(), id3 = UUID.randomUUID(), id4 = UUID.randomUUID();
+        UUID id1 = UUID.randomUUID();
+        UUID id2 = UUID.randomUUID();
+        UUID id3 = UUID.randomUUID();
+        UUID id4 = UUID.randomUUID();
 
         SyncActionDto createAction = new SyncActionDto();
-        createAction.setId(1L); createAction.setEntityId(id1); createAction.setEntityType("TIMER_ENTRY"); createAction.setAction("CREATE");
+        createAction.setId(1L);
+        createAction.setEntityId(id1);
+        createAction.setEntityType("TIMER_ENTRY");
+        createAction.setAction("CREATE");
         TimerEntryCreateRequestDto createPayload = mock(TimerEntryCreateRequestDto.class);
         when(payloadMapper.extractPayload(createAction)).thenReturn(Optional.of(createPayload));
 
         SyncActionDto updateAction = new SyncActionDto();
-        updateAction.setId(2L); updateAction.setEntityId(id2); updateAction.setEntityType("TIMER_ENTRY"); updateAction.setAction("UPDATE");
+        updateAction.setId(2L);
+        updateAction.setEntityId(id2);
+        updateAction.setEntityType("TIMER_ENTRY");
+        updateAction.setAction("UPDATE");
         TimerEntryUpdateRequestDto updatePayload = mock(TimerEntryUpdateRequestDto.class);
         when(payloadMapper.extractPayload(updateAction)).thenReturn(Optional.of(updatePayload));
 
         SyncActionDto deleteAction = new SyncActionDto();
-        deleteAction.setId(3L); deleteAction.setEntityId(id3); deleteAction.setEntityType("TIMER_ENTRY"); deleteAction.setAction("DELETE");
+        deleteAction.setId(3L);
+        deleteAction.setEntityId(id3);
+        deleteAction.setEntityType("TIMER_ENTRY");
+        deleteAction.setAction("DELETE");
 
         SyncActionDto unsupportedAction = new SyncActionDto();
-        unsupportedAction.setId(4L); unsupportedAction.setEntityId(id4); unsupportedAction.setEntityType("TIMER_ENTRY"); unsupportedAction.setAction("UNKNOWN_ACTION");
+        unsupportedAction.setId(4L);
+        unsupportedAction.setEntityId(id4);
+        unsupportedAction.setEntityType("TIMER_ENTRY");
+        unsupportedAction.setAction("UNKNOWN_ACTION");
         when(payloadMapper.extractPayload(unsupportedAction)).thenReturn(Optional.of(new Object()));
 
         SyncQueueBulkRequest request = new SyncQueueBulkRequest();
@@ -305,23 +335,38 @@ class SyncServiceImplTest {
     void processQueue_TimerOptionActions_ShouldCallCorrectTimerOptionServiceMethods() {
         // 1. Arrange
         User user = mock(User.class);
-        UUID id1 = UUID.randomUUID(), id2 = UUID.randomUUID(), id3 = UUID.randomUUID(), id4 = UUID.randomUUID();
+        UUID id1 = UUID.randomUUID();
+        UUID id2 = UUID.randomUUID();
+        UUID id3 = UUID.randomUUID();
+        UUID id4 = UUID.randomUUID();
 
         SyncActionDto createAction = new SyncActionDto();
-        createAction.setId(1L); createAction.setEntityId(id1); createAction.setEntityType("TIMER_OPTION"); createAction.setAction("CREATE");
+        createAction.setId(1L);
+        createAction.setEntityId(id1);
+        createAction.setEntityType("TIMER_OPTION");
+        createAction.setAction("CREATE");
         TimerOptionCreateRequestDto createPayload = mock(TimerOptionCreateRequestDto.class);
         when(payloadMapper.extractPayload(createAction)).thenReturn(Optional.of(createPayload));
 
         SyncActionDto updateAction = new SyncActionDto();
-        updateAction.setId(2L); updateAction.setEntityId(id2); updateAction.setEntityType("TIMER_OPTION"); updateAction.setAction("UPDATE");
+        updateAction.setId(2L);
+        updateAction.setEntityId(id2);
+        updateAction.setEntityType("TIMER_OPTION");
+        updateAction.setAction("UPDATE");
         TimerOptionUpdateRequestDto updatePayload = mock(TimerOptionUpdateRequestDto.class);
         when(payloadMapper.extractPayload(updateAction)).thenReturn(Optional.of(updatePayload));
 
         SyncActionDto deleteAction = new SyncActionDto();
-        deleteAction.setId(3L); deleteAction.setEntityId(id3); deleteAction.setEntityType("TIMER_OPTION"); deleteAction.setAction("DELETE");
+        deleteAction.setId(3L);
+        deleteAction.setEntityId(id3);
+        deleteAction.setEntityType("TIMER_OPTION");
+        deleteAction.setAction("DELETE");
 
         SyncActionDto unsupportedAction = new SyncActionDto();
-        unsupportedAction.setId(4L); unsupportedAction.setEntityId(id4); unsupportedAction.setEntityType("TIMER_OPTION"); unsupportedAction.setAction("UNKNOWN_ACTION");
+        unsupportedAction.setId(4L);
+        unsupportedAction.setEntityId(id4);
+        unsupportedAction.setEntityType("TIMER_OPTION");
+        unsupportedAction.setAction("UNKNOWN_ACTION");
         when(payloadMapper.extractPayload(unsupportedAction)).thenReturn(Optional.of(new Object()));
 
         SyncQueueBulkRequest request = new SyncQueueBulkRequest();
@@ -342,20 +387,31 @@ class SyncServiceImplTest {
     void processQueue_TimerSettingActions_ShouldCallTimerPresetServiceUpsert() {
         // 1. Arrange
         User user = mock(User.class);
-        UUID id1 = UUID.randomUUID(), id2 = UUID.randomUUID(), id3 = UUID.randomUUID();
+        UUID id1 = UUID.randomUUID();
+        UUID id2 = UUID.randomUUID();
+        UUID id3 = UUID.randomUUID();
 
         SyncActionDto createAction = new SyncActionDto();
-        createAction.setId(1L); createAction.setEntityId(id1); createAction.setEntityType("TIMER_SETTING"); createAction.setAction("CREATE");
+        createAction.setId(1L);
+        createAction.setEntityId(id1);
+        createAction.setEntityType("TIMER_SETTING");
+        createAction.setAction("CREATE");
         TimerPresetRequestDto createPayload = mock(TimerPresetRequestDto.class);
         when(payloadMapper.extractPayload(createAction)).thenReturn(Optional.of(createPayload));
 
         SyncActionDto updateAction = new SyncActionDto();
-        updateAction.setId(2L); updateAction.setEntityId(id2); updateAction.setEntityType("TIMER_SETTING"); updateAction.setAction("UPDATE");
+        updateAction.setId(2L);
+        updateAction.setEntityId(id2);
+        updateAction.setEntityType("TIMER_SETTING");
+        updateAction.setAction("UPDATE");
         TimerPresetRequestDto updatePayload = mock(TimerPresetRequestDto.class);
         when(payloadMapper.extractPayload(updateAction)).thenReturn(Optional.of(updatePayload));
 
         SyncActionDto unsupportedAction = new SyncActionDto();
-        unsupportedAction.setId(3L); unsupportedAction.setEntityId(id3); unsupportedAction.setEntityType("TIMER_SETTING"); unsupportedAction.setAction("UNKNOWN_ACTION");
+        unsupportedAction.setId(3L);
+        unsupportedAction.setEntityId(id3);
+        unsupportedAction.setEntityType("TIMER_SETTING");
+        unsupportedAction.setAction("UNKNOWN_ACTION");
         when(payloadMapper.extractPayload(unsupportedAction)).thenReturn(Optional.of(new Object()));
 
         SyncQueueBulkRequest request = new SyncQueueBulkRequest();
