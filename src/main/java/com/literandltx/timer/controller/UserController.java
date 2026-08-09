@@ -43,7 +43,7 @@ public class UserController {
     public ResponseEntity<Void> deleteMyAccount(
             @AuthenticationPrincipal User user
     ) {
-        userService.deleteUser(user.getId());
+        userService.deleteUser(user);
         
         return ResponseEntity.noContent().build();
     }
